@@ -1,193 +1,235 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Cotizador StableBuilds</title>
-  <link rel="stylesheet" href="styles/main.css">
-  <link rel="stylesheet" href="styles/brands/construccion.css">
-  <link rel="manifest" href="manifest.json">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cotizador StableBuilds</title>
+    <link rel="stylesheet" href="styles/main.css">
+    <link rel="stylesheet" href="styles/brands/construccion.css">
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#2196F3">
+    <link rel="icon" type="image/png" href="assets/logos/construccion.png">
 </head>
 <body class="brand-bg">
-  <div id="app">
-    <!-- Header -->
-    <header class="brand-primary-bg">
-      <img src="assets/logos/construccion.png" alt="Logo StableBuilds" class="logo-principal">
-      <h1 class="brand-secondary-text">Cotizador</h1>
-      <button id="btn-config" class="btn-config">⚙️</button>
-    </header>
+    <div id="app">
+        <!-- Header -->
+        <header class="brand-primary-bg">
+            <img src="assets/logos/construccion.png" alt="Logo StableBuilds" class="logo-principal">
+            <h1 class="brand-secondary-text">Cotizador</h1>
+            <div class="header-buttons">
+                <button id="btn-config" class="btn-icon" title="Configuración">⚙️</button>
+                <button id="btn-theme" class="btn-icon" title="Cambiar tema">🌓</button>
+            </div>
+        </header>
 
-    <!-- Contenedor principal -->
-    <main>
-      <!-- Sección de configuración (oculta inicialmente) -->
-      <section id="config-section" class="config-panel hidden">
-        <h2>Configuración de Empresa</h2>
-        <div class="input-group">
-          <label>Nombre:</label>
-          <input type="text" id="config-empresa" placeholder="StableBuilds">
-        </div>
-        <div class="input-group">
-          <label>Dirección:</label>
-          <input type="text" id="config-direccion">
-        </div>
-        <div class="input-group">
-          <label>Teléfono:</label>
-          <input type="text" id="config-telefono">
-        </div>
-        <div class="input-group">
-          <label>Email:</label>
-          <input type="email" id="config-email">
-        </div>
-        <div class="input-group">
-          <label>Sitio Web:</label>
-          <input type="text" id="config-web" placeholder="stablebuilds.com">
-        </div>
-        <button id="btn-guardar-config" class="btn brand-secondary-bg">Guardar</button>
-      </section>
+        <!-- Contenedor principal -->
+        <main>
+            <!-- Panel de Configuración -->
+            <section id="config-section" class="config-panel hidden">
+                <div class="panel-header">
+                    <h2>Configuración de Empresa</h2>
+                    <button class="btn-close" id="btn-close-config">×</button>
+                </div>
+                <div class="panel-content">
+                    <div class="input-group">
+                        <label for="config-empresa">Nombre:</label>
+                        <input type="text" id="config-empresa" placeholder="StableBuilds">
+                    </div>
+                    <div class="input-group">
+                        <label for="config-direccion">Dirección:</label>
+                        <input type="text" id="config-direccion">
+                    </div>
+                    <div class="input-group">
+                        <label for="config-telefono">Teléfono:</label>
+                        <input type="tel" id="config-telefono">
+                    </div>
+                    <div class="input-group">
+                        <label for="config-email">Email:</label>
+                        <input type="email" id="config-email">
+                    </div>
+                    <div class="input-group">
+                        <label for="config-web">Sitio Web:</label>
+                        <input type="url" id="config-web" placeholder="https://stablebuilds.com">
+                    </div>
+                    <button id="btn-guardar-config" class="btn btn-primary">Guardar</button>
+                </div>
+            </section>
 
-      <!-- Formulario de cotización -->
-      <section id="form-cotizacion">
-        <div class="two-columns">
-          <!-- Datos del Cliente -->
-          <div class="column">
-            <h2 class="brand-text">Datos del Cliente</h2>
-            <div class="client-selection">
-              <div class="input-group">
-                <label>Clientes Guardados:</label>
-                <select id="clientes-guardados" class="brand-input">
-                  <option value="">-- Seleccionar cliente --</option>
-                </select>
-              </div>
-              <div class="input-group">
-                <button id="btn-guardar-cliente" class="btn brand-secondary-bg">💾 Guardar Cliente</button>
-              </div>
-            </div>
-            <div class="input-group">
-              <label>Nombre:</label>
-              <input type="text" id="cliente-nombre" class="brand-input" required>
-            </div>
-            <div class="input-group">
-              <label>Dirección:</label>
-              <input type="text" id="cliente-direccion" class="brand-input">
-            </div>
-            <div class="input-group">
-              <label>Teléfono:</label>
-              <input type="text" id="cliente-telefono" class="brand-input">
-            </div>
-            <div class="input-group">
-              <label>Email:</label>
-              <input type="email" id="cliente-email" class="brand-input">
-            </div>
-          </div>
+            <!-- Formulario de Cotización -->
+            <section id="form-cotizacion" class="cotizacion-container">
+                <div class="two-columns">
+                    <!-- Datos del Cliente -->
+                    <div class="column">
+                        <div class="card">
+                            <h2 class="card-title">Datos del Cliente</h2>
+                            <div class="client-selection">
+                                <div class="input-group">
+                                    <label for="clientes-guardados">Clientes Guardados:</label>
+                                    <select id="clientes-guardados" class="brand-input">
+                                        <option value="">-- Seleccionar cliente --</option>
+                                    </select>
+                                </div>
+                                <div class="button-group">
+                                    <button id="btn-guardar-cliente" class="btn btn-secondary">
+                                        <span class="icon">💾</span> Guardar Cliente
+                                    </button>
+                                    <button id="btn-nuevo-cliente" class="btn btn-outline">
+                                        <span class="icon">➕</span> Nuevo
+                                    </button>
+                                </div>
+                            </div>
+                            <div class="client-form">
+                                <div class="input-group">
+                                    <label for="cliente-nombre">Nombre:</label>
+                                    <input type="text" id="cliente-nombre" class="brand-input" required>
+                                </div>
+                                <div class="input-group">
+                                    <label for="cliente-direccion">Dirección:</label>
+                                    <input type="text" id="cliente-direccion" class="brand-input">
+                                </div>
+                                <div class="input-group">
+                                    <label for="cliente-telefono">Teléfono:</label>
+                                    <input type="tel" id="cliente-telefono" class="brand-input">
+                                </div>
+                                <div class="input-group">
+                                    <label for="cliente-email">Email:</label>
+                                    <input type="email" id="cliente-email" class="brand-input">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
 
-          <!-- Configuración de Cotización -->
-          <div class="column">
-            <h2 class="brand-text">Configuración</h2>
-            <div class="input-group">
-              <label>Folio:</label>
-              <input type="text" id="cotizacion-folio" class="brand-input" value="SB-2023-001">
+                    <!-- Configuración de Cotización -->
+                    <div class="column">
+                        <div class="card">
+                            <h2 class="card-title">Configuración</h2>
+                            <div class="input-group">
+                                <label for="cotizacion-folio">Folio:</label>
+                                <input type="text" id="cotizacion-folio" class="brand-input" value="SB-2023-001">
+                            </div>
+                            <div class="input-group">
+                                <label for="cotizacion-iva">IVA (%):</label>
+                                <input type="number" id="cotizacion-iva" class="brand-input" value="16" min="0" max="100">
+                            </div>
+                            <div class="input-group">
+                                <label for="cotizacion-descuento">Descuento ($):</label>
+                                <input type="number" id="cotizacion-descuento" class="brand-input" value="0" min="0">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Lista de Materiales -->
+                <div class="card">
+                    <div class="card-header">
+                        <h2 class="card-title">Materiales y Servicios</h2>
+                        <button id="btn-add-material" class="btn btn-primary">
+                            <span class="icon">➕</span> Agregar Concepto
+                        </button>
+                    </div>
+                    <div id="lista-materiales" class="items-container">
+                        <!-- Los items se agregarán dinámicamente -->
+                    </div>
+                </div>
+
+                <!-- Pagos y Adelantos -->
+                <div class="card">
+                    <h2 class="card-title">Pagos y Adelantos</h2>
+                    <div class="two-columns">
+                        <div class="column">
+                            <div class="input-group">
+                                <label for="pago-anticipo">Anticipo ($):</label>
+                                <input type="number" id="pago-anticipo" class="brand-input" value="0" min="0">
+                            </div>
+                            <div class="input-group">
+                                <label for="fecha-anticipo">Fecha de anticipo:</label>
+                                <input type="date" id="fecha-anticipo" class="brand-input">
+                            </div>
+                        </div>
+                        <div class="column">
+                            <div class="input-group">
+                                <label for="forma-pago">Forma de pago:</label>
+                                <select id="forma-pago" class="brand-input">
+                                    <option value="Efectivo">Efectivo</option>
+                                    <option value="Transferencia">Transferencia</option>
+                                    <option value="Depósito">Depósito</option>
+                                    <option value="Cheque">Cheque</option>
+                                    <option value="Tarjeta">Tarjeta</option>
+                                </select>
+                            </div>
+                            <div class="input-group">
+                                <label for="notas-pago">Notas de pago:</label>
+                                <input type="text" id="notas-pago" class="brand-input" placeholder="Referencia, cuenta, etc.">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Totales -->
+                <div class="card totals-card">
+                    <div class="totals-grid">
+                        <div class="total-row">
+                            <span class="total-label">Subtotal:</span>
+                            <span id="subtotal" class="total-value">$0.00</span>
+                        </div>
+                        <div class="total-row">
+                            <span class="total-label">Descuento:</span>
+                            <span id="descuento" class="total-value discount">$0.00</span>
+                        </div>
+                        <div class="total-row">
+                            <span class="total-label">IVA (<span id="iva-porcentaje">16</span>%):</span>
+                            <span id="iva" class="total-value">$0.00</span>
+                        </div>
+                        <div class="total-row grand-total">
+                            <span class="total-label">TOTAL:</span>
+                            <span id="total" class="total-value">$0.00</span>
+                        </div>
+                        <div class="total-row">
+                            <span class="total-label">Anticipo:</span>
+                            <span id="anticipo-display" class="total-value advance">$0.00</span>
+                        </div>
+                        <div class="total-row pending-total">
+                            <span class="total-label">PENDIENTE DE PAGO:</span>
+                            <span id="pendiente" class="total-value pending">$0.00</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Botones de Acción -->
+                <div class="action-buttons">
+                    <button id="btn-guardar" class="btn btn-secondary">
+                        <span class="icon">💾</span> Guardar
+                    </button>
+                    <button id="btn-generar-pdf" class="btn btn-primary">
+                        <span class="icon">📄</span> Generar PDF
+                    </button>
+                </div>
+            </section>
+        </main>
+
+        <!-- Footer -->
+        <footer class="brand-primary-bg">
+            <img src="assets/logos/skillhub.png" alt="Logo SkillHub" class="logo-secundario">
+            <div class="footer-text">
+                <p>© 2025 StableBuilds</p>
+                <p>Versión 1.0.0</p>
             </div>
-            <div class="input-group">
-              <label>IVA (%):</label>
-              <input type="number" id="cotizacion-iva" class="brand-input" value="16" min="0">
-            </div>
-            <div class="input-group">
-              <label>Descuento ($):</label>
-              <input type="number" id="cotizacion-descuento" class="brand-input" value="0" min="0">
-            </div>
-          </div>
-        </div>
-
-        <!-- Lista de Materiales -->
-        <h2 class="brand-text">Materiales y Servicios</h2>
-        <div id="lista-materiales" class="items-container">
-          <!-- Los items se agregarán dinámicamente -->
-        </div>
-        <button id="btn-add-material" class="btn brand-secondary-bg">➕ Agregar Concepto</button>
-
-        <!-- Pagos y Adelantos -->
-        <h2 class="brand-text">Pagos y Adelantos</h2>
-        <div class="pagos-container brand-border">
-          <div class="two-columns">
-            <div class="column">
-              <div class="input-group">
-                <label>Anticipo ($):</label>
-                <input type="number" id="pago-anticipo" class="brand-input" value="0" min="0">
-              </div>
-              <div class="input-group">
-                <label>Fecha de anticipo:</label>
-                <input type="date" id="fecha-anticipo" class="brand-input">
-              </div>
-            </div>
-            <div class="column">
-              <div class="input-group">
-                <label>Forma de pago:</label>
-                <select id="forma-pago" class="brand-input">
-                  <option value="Efectivo">Efectivo</option>
-                  <option value="Transferencia">Transferencia</option>
-                  <option value="Depósito">Depósito</option>
-                  <option value="Cheque">Cheque</option>
-                  <option value="Tarjeta">Tarjeta</option>
-                </select>
-              </div>
-              <div class="input-group">
-                <label>Notas de pago:</label>
-                <input type="text" id="notas-pago" class="brand-input" placeholder="Referencia, cuenta, etc.">
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <!-- Totales -->
-        <div id="totales" class="totals-container brand-border">
-          <div class="total-row">
-            <span>Subtotal:</span>
-            <span id="subtotal">$0.00</span>
-          </div>
-          <div class="total-row">
-            <span>Descuento:</span>
-            <span id="descuento">$0.00</span>
-          </div>
-          <div class="total-row">
-            <span>IVA (<span id="iva-porcentaje">16</span>%):</span>
-            <span id="iva">$0.00</span>
-          </div>
-          <div class="total-row grand-total">
-            <span>TOTAL:</span>
-            <span id="total">$0.00</span>
-          </div>
-          <div class="total-row">
-            <span>Anticipo:</span>
-            <span id="anticipo-display">$0.00</span>
-          </div>
-          <div class="total-row pending-total">
-            <span>PENDIENTE DE PAGO:</span>
-            <span id="pendiente">$0.00</span>
-          </div>
-        </div>
-
-        <button id="btn-generar-pdf" class="btn-pdf brand-primary-bg">📄 Generar PDF</button>
-      </section>
-    </main>
-
-    <!-- Footer -->
-    <footer>
-      <img src="assets/logos/skillhub.png" alt="Logo SkillHub" class="logo-secundario">
-    </footer>
-  </div>
-
-  <!-- Plantilla para materiales (hidden) -->
-  <template id="template-material">
-    <div class="material-item">
-      <button class="btn-eliminar">🗑️</button>
-      <input type="text" class="material-nombre" placeholder="Descripción">
-      <input type="number" class="material-cantidad" placeholder="Cant." min="1" value="1">
-      <input type="number" class="material-precio" placeholder="P. Unitario" min="0" step="0.01" value="0">
-      <span class="material-total">$0.00</span>
+        </footer>
     </div>
-  </template>
 
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-  <script type="module" src="js/app.js"></script>
+    <!-- Templates -->
+    <template id="template-material">
+        <div class="material-item">
+            <button class="btn-icon btn-eliminar" title="Eliminar concepto">🗑️</button>
+            <input type="text" class="material-nombre brand-input" placeholder="Descripción" required>
+            <input type="number" class="material-cantidad brand-input" placeholder="Cant." min="1" value="1" required>
+            <input type="number" class="material-precio brand-input" placeholder="P. Unitario" min="0" step="0.01" value="0" required>
+            <span class="material-total">$0.00</span>
+        </div>
+    </template>
+
+    <!-- Scripts -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script type="module" src="js/app.js"></script>
 </body>
 </html>
