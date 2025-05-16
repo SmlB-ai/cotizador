@@ -59,8 +59,4 @@ self.addEventListener('activate', event => {
             );
         })
     );
-<<<<<<< HEAD
 });
-=======
-});
->>>>>>> f66a45b (Commit inicial)

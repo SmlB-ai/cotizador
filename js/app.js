@@ -43,7 +43,83 @@ class App {
             this.mostrarNotificacion('Error al iniciar la aplicación', 'error');
         }
     }
+    // Inicialización de importación/exportación de clientes (opcional, ejemplo alternativo)
+    initializeImportExport() {
+        const btnExportar = document.getElementById('btnExportarClientes');
+        const btnImportar = document.getElementById('btnImportarClientes');
+        const fileInput = document.getElementById('fileImportarClientes');
+        const statusDiv = document.getElementById('importStatus');
 
+        if (!btnExportar || !btnImportar || !fileInput || !statusDiv) return;
+
+        btnExportar.addEventListener('click', () => {
+            const csv = this.clientes.exportarCSV();
+            const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+            const link = document.createElement('a');
+            const url = URL.createObjectURL(blob);
+            link.setAttribute('href', url);
+            link.setAttribute('download', `clientes_${new Date().toISOString().split('T')[0]}.csv`);
+            link.style.visibility = 'hidden';
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        });
+
+        btnImportar.addEventListener('click', () => {
+            fileInput.click();
+        });
+
+        fileInput.addEventListener('change', async (e) => {
+            if (e.target.files.length === 0) return;
+
+            const file = e.target.files[0];
+            try {
+                const texto = await file.text();
+                console.log('Contenido del archivo:', texto);
+
+                const resultado = this.clientes.importarCSV(texto);
+
+                statusDiv.className = 'alert ' +
+                    (resultado.exitosos > 0 ? 'alert-success' : 'alert-warning');
+                statusDiv.textContent = `Importación completada: ${resultado.exitosos} exitosos, ${resultado.fallos} fallos`;
+                statusDiv.style.display = 'block';
+
+                if (typeof this.clientes.mostrarClientesActuales === 'function') {
+                    this.clientes.mostrarClientesActuales();
+                }
+
+                this.actualizarListaClientes();
+            } catch (error) {
+                console.error('Error al leer archivo:', error);
+                statusDiv.className = 'alert alert-danger';
+                statusDiv.textContent = 'Error al importar: ' + error.message;
+                statusDiv.style.display = 'block';
+            }
+
+            fileInput.value = '';
+        });
+    }
+
+    // Método para actualizar la lista de clientes en la interfaz (ejemplo alternativo)
+    actualizarListaClientes() {
+        const listaClientes = document.getElementById('listaClientes');
+        if (listaClientes) {
+            const clientes = JSON.parse(localStorage.getItem('cotizador_clientes') || '[]');
+            // Aquí puedes actualizar la vista con los clientes si tienes una tabla/lista
+        }
+        // También puedes mantener la lógica existente para el select de clientes
+        if (this.elements && this.elements.clientesSelect) {
+            const clientes = this.clientes.obtenerTodos();
+            const select = this.elements.clientesSelect;
+            while (select.options.length > 1) {
+                select.remove(1);
+            }
+            clientes.forEach((cliente, index) => {
+                const option = new Option(cliente.nombre, index.toString());
+                select.add(option);
+            });
+        }
+    }
     initializeElements() {
         this.elements = {
             // Configuración

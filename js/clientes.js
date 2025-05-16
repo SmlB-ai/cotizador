@@ -139,7 +139,14 @@ export class Clientes {
      * @returns {Object} Resultado de la importación
      */
     importarCSV(csvContent) {
-        const lineas = csvContent.split('\n');
+        // Normalizar saltos de línea
+        const contenidoNormalizado = csvContent.replace(/\r\n/g, '\n').replace(/\r/g, '\n');
+        const lineas = contenidoNormalizado.split('\n').filter(linea => linea.trim() !== '');
+        
+        if (lineas.length === 0) {
+            throw new Error('El archivo está vacío');
+        }
+
         const encabezados = lineas[0].split(',');
         const resultado = {
             exitosos: 0,
@@ -268,22 +275,3 @@ export class Clientes {
         return valores;
     }
 }
-
-// Ejemplo de uso:
-/*
-const gestorClientes = new Clientes();
-
-// Agregar un cliente
-gestorClientes.guardar({
-    nombre: "Juan Pérez",
-    email: "juan@ejemplo.com",
-    telefono: "555-1234",
-    direccion: "Calle Principal 123"
-});
-
-// Buscar clientes
-const resultados = gestorClientes.buscar("Juan");
-
-// Exportar a CSV
-const csv = gestorClientes.exportarCSV();
-*/
