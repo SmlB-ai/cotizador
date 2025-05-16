@@ -1,89 +1,62 @@
-// Service Worker para la aplicación PWA
-const CACHE_NAME = 'cotizador-cache-v1';
-
-// Archivos que queremos guardar en caché para funcionamiento offline
-const CACHE_ASSETS = [
-  '/',
-  '/index.html',
-  '/manifest.json',
-  '/styles/main.css',
-  '/styles/brands/construccion.css',
-  '/js/app.js',
-  '/js/cotizacion.js',
-  '/js/config.js',
-  '/js/pdf.js',
-  '/assets/logos/construccion.png',
-  '/assets/logos/skillhub.png'
+const CACHE_NAME = 'cotizador-v1';
+const urlsToCache = [
+    '/cotizador/',
+    '/cotizador/index.html',
+    '/cotizador/styles/main.css',
+    '/cotizador/styles/brands/construccion.css',
+    '/cotizador/js/app.js',
+    '/cotizador/js/config.js',
+    '/cotizador/js/cotizacion.js',
+    '/cotizador/js/clientes.js',
+    '/cotizador/js/historial.js',
+    '/cotizador/js/pdf.js',
+    '/cotizador/js/sync.js',
+    '/cotizador/assets/logos/construccion.png',
+    '/cotizador/assets/logos/skillhub.png',
+    'https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js'
 ];
 
-// Instalación del Service Worker
 self.addEventListener('install', event => {
-  console.log('Service Worker: Instalando...');
-  
-  // Esperar hasta que la caché esté lista
-  event.waitUntil(
-    caches.open(CACHE_NAME)
-      .then(cache => {
-        console.log('Service Worker: Archivos en caché');
-        return cache.addAll(CACHE_ASSETS);
-      })
-      .then(() => self.skipWaiting())
-  );
+    event.waitUntil(
+        caches.open(CACHE_NAME)
+            .then(cache => cache.addAll(urlsToCache))
+    );
 });
 
-// Activación del Service Worker
-self.addEventListener('activate', event => {
-  console.log('Service Worker: Activado');
-  
-  // Eliminar cachés antiguas
-  event.waitUntil(
-    caches.keys().then(cacheNames => {
-      return Promise.all(
-        cacheNames.map(cache => {
-          if (cache !== CACHE_NAME) {
-            console.log('Service Worker: Limpiando caché antigua');
-            return caches.delete(cache);
-          }
-        })
-      );
-    })
-  );
-});
-
-// Interceptar las peticiones
 self.addEventListener('fetch', event => {
-  console.log('Service Worker: Interceptando fetch', event.request.url);
-  
-  // Estrategia Cache First
-  event.respondWith(
-    caches.match(event.request)
-      .then(response => {
-        // Si encontramos en caché, devolvemos la respuesta
-        if (response) {
-          return response;
-        }
-        
-        // Si no, hacemos la petición real
-        return fetch(event.request)
-          .then(response => {
-            // Si la respuesta es válida, la almacenamos en caché
-            if (!response || response.status !== 200 || response.type !== 'basic') {
-              return response;
-            }
-            
-            const responseToCache = response.clone();
-            
-            caches.open(CACHE_NAME)
-              .then(cache => {
-                cache.put(event.request, responseToCache);
-              });
-              
-            return response;
-          })
-          .catch(err => {
-            console.error('Error en fetch:', err);
-            // Aquí podríamos devolver una página de fallback
-          });
-      })
-  );
+    event.respondWith(
+        caches.match(event.request)
+            .then(response => {
+                if (response) {
+                    return response;
+                }
+                return fetch(event.request)
+                    .then(response => {
+                        if (!response || response.status !== 200 || response.type !== 'basic') {
+                            return response;
+                        }
+                        const responseToCache = response.clone();
+                        caches.open(CACHE_NAME)
+                            .then(cache => {
+                                cache.put(event.request, responseToCache);
+                            });
+                        return response;
+                    });
+            })
+    );
+});
+
+// Actualizar la caché cuando hay una nueva versión
+self.addEventListener('activate', event => {
+    event.waitUntil(
+        caches.keys().then(cacheNames => {
+            return Promise.all(
+                cacheNames.map(cacheName => {
+                    if (cacheName !== CACHE_NAME) {
+                        return caches.delete(cacheName);
+                    }
+                })
+            );
+        })
+    );
 });
