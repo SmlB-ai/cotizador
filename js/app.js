@@ -135,7 +135,46 @@ class App {
 
         // Eventos de validación
         this.initializeValidationEvents();
+
+      // En tu método initializeEventListeners()
+        this.elements.btnExportarClientes.addEventListener('click', () => this.exportarClientes());
+        this.elements.btnImportarClientes.addEventListener('click', () => this.elements.inputImportarClientes.click());
+        this.elements.inputImportarClientes.addEventListener('change', (e) => this.importarClientes(e));
+
+        // Métodos para exportar e importar
+        exportarClientes() {
+            const csv = this.clientes.exportarCSV();
+            const blob = new Blob([csv], { type: 'text/csv' });
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `clientes_${new Date().toISOString().split('T')[0]}.csv`;
+            a.click();
+            window.URL.revokeObjectURL(url);
+        }
+
+        async importarClientes(event) {
+            const file = event.target.files[0];
+            if (file) {
+                try {
+                    const content = await file.text();
+                    const resultado = this.clientes.importarCSV(content);
+                    this.mostrarNotificacion(
+                        `Importación completada: ${resultado.exitosos} exitosos, ${resultado.fallidos} fallidos`,
+                        resultado.fallidos > 0 ? 'warning' : 'success'
+                    );
+                    this.actualizarListaClientes();
+                } catch (error) {
+                    this.mostrarNotificacion('Error al importar clientes', 'error');
+                }
+            }
+            event.target.value = ''; // Resetear input
+        }
+
+        
     }
+
+    
 
     initializeValidationEvents() {
         // Validación de campos numéricos
