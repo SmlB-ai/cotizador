@@ -598,9 +598,4 @@ document.addEventListener('DOMContentLoaded', () => {
     // Iniciar la aplicación
     window.app = new App();
 });
-
-<<<<<<< HEAD
-export default App;
-=======
-export default App;
->>>>>>> bcbd9d8 (feat: actualiza diseño y funcionalidad principal)
+//ayuda a ver que show
