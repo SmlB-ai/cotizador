@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Cotizador StableBuilds</title>
+  <link rel="stylesheet" href="styles/main.css">
+  <link rel="stylesheet" href="styles/brands/construccion.css">
+  <link rel="manifest" href="manifest.json">
+</head>
+<body class="brand-bg">
+  <div id="app">
+    <!-- Header -->
+    <header class="brand-primary-bg">
+      <img src="assets/logos/construccion.png" alt="Logo StableBuilds" class="logo-principal">
+      <h1 class="brand-secondary-text">Cotizador</h1>
+      <button id="btn-config" class="btn-config">⚙️</button>
+    </header>
+
+    <!-- Contenedor principal -->
+    <main>
+      <!-- Sección de configuración (oculta inicialmente) -->
+      <section id="config-section" class="config-panel hidden">
+        <h2>Configuración de Empresa</h2>
+        <div class="input-group">
+          <label>Nombre:</label>
+          <input type="text" id="config-empresa" placeholder="StableBuilds">
+        </div>
+        <div class="input-group">
+          <label>Dirección:</label>
+          <input type="text" id="config-direccion">
+        </div>
+        <div class="input-group">
+          <label>Teléfono:</label>
+          <input type="text" id="config-telefono">
+        </div>
+        <div class="input-group">
+          <label>Email:</label>
+          <input type="email" id="config-email">
+        </div>
+        <div class="input-group">
+          <label>Sitio Web:</label>
+          <input type="text" id="config-web" placeholder="stablebuilds.com">
+        </div>
+        <button id="btn-guardar-config" class="btn brand-secondary-bg">Guardar</button>
+      </section>
+
+      <!-- Formulario de cotización -->
+      <section id="form-cotizacion">
+        <div class="two-columns">
+          <!-- Datos del Cliente -->
+          <div class="column">
+            <h2 class="brand-text">Datos del Cliente</h2>
+            <div class="client-selection">
+              <div class="input-group">
+                <label>Clientes Guardados:</label>
+                <select id="clientes-guardados" class="brand-input">
+                  <option value="">-- Seleccionar cliente --</option>
+                </select>
+              </div>
+              <div class="input-group">
+                <button id="btn-guardar-cliente" class="btn brand-secondary-bg">💾 Guardar Cliente</button>
+              </div>
+            </div>
+            <div class="input-group">
+              <label>Nombre:</label>
+              <input type="text" id="cliente-nombre" class="brand-input" required>
+            </div>
+            <div class="input-group">
+              <label>Dirección:</label>
+              <input type="text" id="cliente-direccion" class="brand-input">
+            </div>
+            <div class="input-group">
+              <label>Teléfono:</label>
+              <input type="text" id="cliente-telefono" class="brand-input">
+            </div>
+            <div class="input-group">
+              <label>Email:</label>
+              <input type="email" id="cliente-email" class="brand-input">
+            </div>
+          </div>
+
+          <!-- Configuración de Cotización -->
+          <div class="column">
+            <h2 class="brand-text">Configuración</h2>
+            <div class="input-group">
+              <label>Folio:</label>
+              <input type="text" id="cotizacion-folio" class="brand-input" value="SB-2023-001">
+            </div>
+            <div class="input-group">
+              <label>IVA (%):</label>
+              <input type="number" id="cotizacion-iva" class="brand-input" value="16" min="0">
+            </div>
+            <div class="input-group">
+              <label>Descuento ($):</label>
+              <input type="number" id="cotizacion-descuento" class="brand-input" value="0" min="0">
+            </div>
+          </div>
+        </div>
+
+        <!-- Lista de Materiales -->
+        <h2 class="brand-text">Materiales y Servicios</h2>
+        <div id="lista-materiales" class="items-container">
+          <!-- Los items se agregarán dinámicamente -->
+        </div>
+        <button id="btn-add-material" class="btn brand-secondary-bg">➕ Agregar Concepto</button>
+
+        <!-- Pagos y Adelantos -->
+        <h2 class="brand-text">Pagos y Adelantos</h2>
+        <div class="pagos-container brand-border">
+          <div class="two-columns">
+            <div class="column">
+              <div class="input-group">
+                <label>Anticipo ($):</label>
+                <input type="number" id="pago-anticipo" class="brand-input" value="0" min="0">
+              </div>
+              <div class="input-group">
+                <label>Fecha de anticipo:</label>
+                <input type="date" id="fecha-anticipo" class="brand-input">
+              </div>
+            </div>
+            <div class="column">
+              <div class="input-group">
+                <label>Forma de pago:</label>
+                <select id="forma-pago" class="brand-input">
+                  <option value="Efectivo">Efectivo</option>
+                  <option value="Transferencia">Transferencia</option>
+                  <option value="Depósito">Depósito</option>
+                  <option value="Cheque">Cheque</option>
+                  <option value="Tarjeta">Tarjeta</option>
+                </select>
+              </div>
+              <div class="input-group">
+                <label>Notas de pago:</label>
+                <input type="text" id="notas-pago" class="brand-input" placeholder="Referencia, cuenta, etc.">
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Totales -->
+        <div id="totales" class="totals-container brand-border">
+          <div class="total-row">
+            <span>Subtotal:</span>
+            <span id="subtotal">$0.00</span>
+          </div>
+          <div class="total-row">
+            <span>Descuento:</span>
+            <span id="descuento">$0.00</span>
+          </div>
+          <div class="total-row">
+            <span>IVA (<span id="iva-porcentaje">16</span>%):</span>
+            <span id="iva">$0.00</span>
+          </div>
+          <div class="total-row grand-total">
+            <span>TOTAL:</span>
+            <span id="total">$0.00</span>
+          </div>
+          <div class="total-row">
+            <span>Anticipo:</span>
+            <span id="anticipo-display">$0.00</span>
+          </div>
+          <div class="total-row pending-total">
+            <span>PENDIENTE DE PAGO:</span>
+            <span id="pendiente">$0.00</span>
+          </div>
+        </div>
+
+        <button id="btn-generar-pdf" class="btn-pdf brand-primary-bg">📄 Generar PDF</button>
+      </section>
+    </main>
+
+    <!-- Footer -->
+    <footer>
+      <img src="assets/logos/skillhub.png" alt="Logo SkillHub" class="logo-secundario">
+    </footer>
+  </div>
+
+  <!-- Plantilla para materiales (hidden) -->
+  <template id="template-material">
+    <div class="material-item">
+      <button class="btn-eliminar">🗑️</button>
+      <input type="text" class="material-nombre" placeholder="Descripción">
+      <input type="number" class="material-cantidad" placeholder="Cant." min="1" value="1">
+      <input type="number" class="material-precio" placeholder="P. Unitario" min="0" step="0.01" value="0">
+      <span class="material-total">$0.00</span>
+    </div>
+  </template>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <script type="module" src="js/app.js"></script>
+</body>
+</html>

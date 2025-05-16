@@ -1,0 +1,226 @@
+/* Estilos generales */
+body {
+  font-family: 'Arial', sans-serif;
+  margin: 0;
+  padding: 0;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+#app {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+}
+
+/* Header */
+header {
+  padding: 1rem;
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.logo-principal {
+  height: 50px;
+}
+
+/* Formulario */
+#form-cotizacion {
+  padding: 1rem;
+  max-width: 800px;
+  margin: 0 auto;
+  width: 100%;
+}
+
+.input-group {
+  margin-bottom: 1rem;
+}
+
+.brand-input {
+  width: 100%;
+  padding: 0.5rem;
+  border-radius: 4px;
+}
+
+.btn {
+  padding: 0.5rem 1rem;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-weight: bold;
+}
+
+.items-container {
+  margin: 1rem 0;
+  border: 1px dashed #ccc;
+  padding: 1rem;
+  border-radius: 4px;
+}
+
+.totals-container {
+  padding: 1rem;
+  margin-top: 1rem;
+  border-radius: 4px;
+}
+
+/* Footer */
+footer {
+  margin-top: auto;
+  padding: 1rem;
+  text-align: right;
+}
+
+.logo-secundario {
+  height: 30px;
+  opacity: 0.8;
+}
+
+/* Botón PDF */
+.btn-pdf {
+  display: block;
+  margin: 2rem auto;
+  padding: 0.75rem 2rem;
+  font-size: 1.1rem;
+}
+
+/* Estilos para el nuevo diseño */
+.two-columns {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+@media (max-width: 768px) {
+  .two-columns {
+    grid-template-columns: 1fr;
+  }
+}
+
+.config-panel {
+  background-color: white;
+  padding: 1.5rem;
+  border-radius: 8px;
+  margin-bottom: 2rem;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+}
+
+.config-panel.hidden {
+  display: none;
+}
+
+.btn-config {
+  background: none;
+  border: none;
+  font-size: 1.5rem;
+  cursor: pointer;
+  margin-left: auto;
+}
+
+.material-item {
+  display: grid;
+  grid-template-columns: auto 1fr 80px 100px auto;
+  gap: 0.5rem;
+  align-items: center;
+  margin-bottom: 0.5rem;
+}
+
+.material-item input {
+  padding: 0.5rem;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+}
+
+.btn-eliminar {
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: #ff4444;
+}
+
+.total-row {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 0.5rem;
+}
+
+.grand-total {
+  font-weight: bold;
+  font-size: 1.2rem;
+  margin-top: 0.5rem;
+  padding-top: 0.5rem;
+  border-top: 2px solid var(--secondary);
+}
+
+/* Estilos para nuevas funcionalidades */
+
+/* Clientes guardados */
+.client-selection {
+  display: flex;
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+.client-selection .input-group {
+  flex: 1;
+  margin-bottom: 0;
+}
+
+#btn-guardar-cliente {
+  padding: 0.5rem;
+  margin-top: 1.5rem;
+  white-space: nowrap;
+}
+
+/* Pagos y adelantos */
+.pagos-container {
+  padding: 1rem;
+  margin: 1rem 0;
+  border-radius: 4px;
+}
+
+.pending-total {
+  font-weight: bold;
+  font-size: 1.1rem;
+  margin-top: 0.5rem;
+  padding-top: 0.5rem;
+  border-top: 1px dashed var(--secondary);
+  color: #444;
+}
+
+/* Animación para mensajes de notificación */
+@keyframes notificationFade {
+  0% { opacity: 0; transform: translateY(-20px); }
+  10% { opacity: 1; transform: translateY(0); }
+  90% { opacity: 1; transform: translateY(0); }
+  100% { opacity: 0; transform: translateY(-20px); }
+}
+
+.notification {
+  position: fixed;
+  top: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  background-color: var(--secondary);
+  color: var(--text-on-secondary);
+  padding: 0.75rem 1.5rem;
+  border-radius: 4px;
+  box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+  z-index: 1000;
+  animation: notificationFade 3s ease-in-out forwards;
+}
+
+/* Estilos para el selector de clientes */
+#clientes-guardados {
+  padding: 0.5rem;
+  width: 100%;
+  border: 1px solid var(--primary);
+  border-radius: 4px;
+  background-color: white;
+}
+
+#clientes-guardados:focus {
+  outline: 2px solid var(--secondary);
+}
