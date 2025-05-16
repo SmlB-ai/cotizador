@@ -7,27 +7,41 @@ import { generarPDF } from './pdf.js';
 
 class App {
     constructor() {
-        // Inicializar módulos
-        this.config = new Config();
-        this.clientes = new Clientes();
-        this.historial = new Historial();
-        this.cotizacion = new Cotizacion({
-            ivaDefault: 16,
-            descuentoDefault: 0,
-            anticipoDefault: 0
-        });
+        console.log('Iniciando aplicación...');
+        this.initializeApp();
+    }
 
-        // Elementos del DOM
-        this.initializeElements();
-        
-        // Cargar datos iniciales
-        this.cargarDatosIniciales();
-        
-        // Inicializar eventos
-        this.initializeEventListeners();
-        
-        // Configurar tema
-        this.initializeTheme();
+    async initializeApp() {
+        try {
+            console.log('Inicializando elementos...');
+            this.initializeElements();
+
+            console.log('Inicializando módulos...');
+            this.config = new Config();
+            this.clientes = new Clientes();
+            this.historial = new Historial();
+            this.cotizacion = new Cotizacion({
+                ivaDefault: 16,
+                descuentoDefault: 0,
+                anticipoDefault: 0
+            });
+
+            console.log('Cargando datos iniciales...');
+            await this.cargarDatosIniciales();
+
+            console.log('Configurando eventos...');
+            this.initializeEventListeners();
+            this.initializeValidationEvents();
+            this.initializeTheme();
+
+            console.log('Iniciando primer material...');
+            this.agregarMaterial();
+
+            console.log('Aplicación iniciada correctamente');
+        } catch (error) {
+            console.error('Error al inicializar la aplicación:', error);
+            this.mostrarNotificacion('Error al iniciar la aplicación', 'error');
+        }
     }
 
     initializeElements() {
@@ -82,7 +96,12 @@ class App {
             
             // Acciones
             btnGuardar: document.getElementById('btn-guardar'),
-            btnGenerarPDF: document.getElementById('btn-generar-pdf')
+            btnGenerarPDF: document.getElementById('btn-generar-pdf'),
+
+            // Importación/Exportación
+            btnExportarClientes: document.getElementById('btn-exportar-clientes'),
+            btnImportarClientes: document.getElementById('btn-importar-clientes'),
+            inputImportarClientes: document.getElementById('input-importar-clientes')
         };
     }
 
@@ -102,79 +121,81 @@ class App {
 
         // Generar folio automático
         this.generarFolioAutomatico();
-
-        // Agregar primer material
-        this.agregarMaterial();
     }
 
     initializeEventListeners() {
-        // Configuración
-        this.elements.btnConfig.addEventListener('click', () => this.toggleConfigPanel());
-        this.elements.btnCloseConfig.addEventListener('click', () => this.toggleConfigPanel());
-        this.elements.btnGuardarConfig.addEventListener('click', () => this.guardarConfiguracion());
-
-        // Tema
-        this.elements.btnTheme.addEventListener('click', () => this.toggleTheme());
-
-        // Clientes
-        this.elements.clientesSelect.addEventListener('change', () => this.cargarClienteSeleccionado());
-        this.elements.btnGuardarCliente.addEventListener('click', () => this.guardarCliente());
-        this.elements.btnNuevoCliente.addEventListener('click', () => this.nuevoCliente());
-
-        // Materiales
-        this.elements.btnAddMaterial.addEventListener('click', () => this.agregarMaterial());
-
-        // Campos que afectan totales
-        this.elements.cotizacionIva.addEventListener('input', () => this.actualizarTotales());
-        this.elements.cotizacionDescuento.addEventListener('input', () => this.actualizarTotales());
-        this.elements.pagoAnticipo.addEventListener('input', () => this.actualizarTotales());
-
-        // Acciones principales
-        this.elements.btnGuardar.addEventListener('click', () => this.guardarCotizacion());
-        this.elements.btnGenerarPDF.addEventListener('click', () => this.generarPDF());
-
-        // Eventos de validación
-        this.initializeValidationEvents();
-
-      // En tu método initializeEventListeners()
-        this.elements.btnExportarClientes.addEventListener('click', () => this.exportarClientes());
-        this.elements.btnImportarClientes.addEventListener('click', () => this.elements.inputImportarClientes.click());
-        this.elements.inputImportarClientes.addEventListener('change', (e) => this.importarClientes(e));
-
-        // Métodos para exportar e importar
-        exportarClientes() {
-            const csv = this.clientes.exportarCSV();
-            const blob = new Blob([csv], { type: 'text/csv' });
-            const url = window.URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = `clientes_${new Date().toISOString().split('T')[0]}.csv`;
-            a.click();
-            window.URL.revokeObjectURL(url);
-        }
-
-        async importarClientes(event) {
-            const file = event.target.files[0];
-            if (file) {
-                try {
-                    const content = await file.text();
-                    const resultado = this.clientes.importarCSV(content);
-                    this.mostrarNotificacion(
-                        `Importación completada: ${resultado.exitosos} exitosos, ${resultado.fallidos} fallidos`,
-                        resultado.fallidos > 0 ? 'warning' : 'success'
-                    );
-                    this.actualizarListaClientes();
-                } catch (error) {
-                    this.mostrarNotificacion('Error al importar clientes', 'error');
-                }
+        try {
+            // Configuración
+            if (this.elements.btnConfig) {
+                this.elements.btnConfig.addEventListener('click', () => this.toggleConfigPanel());
             }
-            event.target.value = ''; // Resetear input
+            if (this.elements.btnCloseConfig) {
+                this.elements.btnCloseConfig.addEventListener('click', () => this.toggleConfigPanel());
+            }
+            if (this.elements.btnGuardarConfig) {
+                this.elements.btnGuardarConfig.addEventListener('click', () => this.guardarConfiguracion());
+            }
+
+            // Tema
+            if (this.elements.btnTheme) {
+                this.elements.btnTheme.addEventListener('click', () => this.toggleTheme());
+            }
+
+            // Clientes
+            if (this.elements.clientesSelect) {
+                this.elements.clientesSelect.addEventListener('change', () => this.cargarClienteSeleccionado());
+            }
+            if (this.elements.btnGuardarCliente) {
+                this.elements.btnGuardarCliente.addEventListener('click', () => this.guardarCliente());
+            }
+            if (this.elements.btnNuevoCliente) {
+                this.elements.btnNuevoCliente.addEventListener('click', () => this.nuevoCliente());
+            }
+
+            // Materiales
+            if (this.elements.btnAddMaterial) {
+                this.elements.btnAddMaterial.addEventListener('click', () => this.agregarMaterial());
+            }
+
+            // Campos que afectan totales
+            if (this.elements.cotizacionIva) {
+                this.elements.cotizacionIva.addEventListener('input', () => this.actualizarTotales());
+            }
+            if (this.elements.cotizacionDescuento) {
+                this.elements.cotizacionDescuento.addEventListener('input', () => this.actualizarTotales());
+            }
+            if (this.elements.pagoAnticipo) {
+                this.elements.pagoAnticipo.addEventListener('input', () => this.actualizarTotales());
+            }
+
+            // Acciones principales
+            if (this.elements.btnGuardar) {
+                this.elements.btnGuardar.addEventListener('click', () => this.guardarCotizacion());
+            }
+            if (this.elements.btnGenerarPDF) {
+                this.elements.btnGenerarPDF.addEventListener('click', () => this.generarPDF());
+            }
+
+            // Exportar/Importar clientes
+            if (this.elements.btnExportarClientes) {
+                this.elements.btnExportarClientes.addEventListener('click', () => this.exportarClientes());
+            }
+            if (this.elements.btnImportarClientes) {
+                this.elements.btnImportarClientes.addEventListener('click', () => {
+                    if (this.elements.inputImportarClientes) {
+                        this.elements.inputImportarClientes.click();
+                    }
+                });
+            }
+            if (this.elements.inputImportarClientes) {
+                this.elements.inputImportarClientes.addEventListener('change', (e) => this.importarClientes(e));
+            }
+
+        } catch (error) {
+            console.error('Error al inicializar eventos:', error);
+            this.mostrarNotificacion('Error al inicializar eventos', 'error');
         }
-
-        
     }
-
-    
 
     initializeValidationEvents() {
         // Validación de campos numéricos
@@ -185,20 +206,24 @@ class App {
         ];
 
         numericalInputs.forEach(input => {
-            input.addEventListener('input', (e) => {
-                let value = e.target.value;
-                if (value < 0) e.target.value = 0;
-                if (e.target.id === 'cotizacion-iva' && value > 100) e.target.value = 100;
-            });
+            if (input) {
+                input.addEventListener('input', (e) => {
+                    let value = e.target.value;
+                    if (value < 0) e.target.value = 0;
+                    if (e.target.id === 'cotizacion-iva' && value > 100) e.target.value = 100;
+                });
+            }
         });
 
         // Validación de email
-        this.elements.clienteEmail.addEventListener('blur', (e) => {
-            const email = e.target.value;
-            if (email && !this.validarEmail(email)) {
-                alert('Por favor, ingrese un email válido');
-            }
-        });
+        if (this.elements.clienteEmail) {
+            this.elements.clienteEmail.addEventListener('blur', (e) => {
+                const email = e.target.value;
+                if (email && !this.validarEmail(email)) {
+                    this.mostrarNotificacion('Por favor, ingrese un email válido', 'warning');
+                }
+            });
+        }
     }
 
     initializeTheme() {
@@ -206,26 +231,6 @@ class App {
         document.body.setAttribute('data-theme', theme);
         this.updateThemeButton(theme);
     }
-
-    // Métodos de UI
-    toggleConfigPanel() {
-        this.elements.configPanel.classList.toggle('hidden');
-    }
-
-    toggleTheme() {
-        const currentTheme = document.body.getAttribute('data-theme');
-        const newTheme = currentTheme === 'light' ? 'dark' : 'light';
-        document.body.setAttribute('data-theme', newTheme);
-        localStorage.setItem('theme', newTheme);
-        this.updateThemeButton(newTheme);
-    }
-
-    updateThemeButton(theme) {
-        this.elements.btnTheme.textContent = theme === 'light' ? '🌙' : '☀️';
-    }
-
-    // Continúa en la siguiente parte...
-        // ... (continúa desde el código anterior)
 
     // Gestión de materiales
     agregarMaterial() {
@@ -273,40 +278,36 @@ class App {
         inputNombre.focus();
     }
 
-    // Cálculos y actualizaciones
-    actualizarTotales() {
-        const materiales = this.obtenerMateriales();
-        const ivaPorcentaje = parseFloat(this.elements.cotizacionIva.value) || 0;
-        const descuento = parseFloat(this.elements.cotizacionDescuento.value) || 0;
-        const anticipo = parseFloat(this.elements.pagoAnticipo.value) || 0;
-
-        // Actualizar cotización
-        this.cotizacion.actualizarDatos({
-            materiales,
-            ivaPorcentaje,
-            descuento,
-            anticipo
-        });
-
-        // Actualizar UI
-        this.elements.subtotal.textContent = this.formatearMoneda(this.cotizacion.subtotal);
-        this.elements.descuento.textContent = this.formatearMoneda(this.cotizacion.descuento);
-        this.elements.iva.textContent = this.formatearMoneda(this.cotizacion.iva);
-        this.elements.total.textContent = this.formatearMoneda(this.cotizacion.total);
-        this.elements.ivaPorcentaje.textContent = ivaPorcentaje;
-        this.elements.anticipoDisplay.textContent = this.formatearMoneda(anticipo);
-        this.elements.pendiente.textContent = this.formatearMoneda(this.cotizacion.total - anticipo);
-    }
-
-    obtenerMateriales() {
-        return Array.from(this.elements.listaMateriales.children).map(item => ({
-            nombre: item.querySelector('.material-nombre').value,
-            cantidad: parseFloat(item.querySelector('.material-cantidad').value) || 0,
-            precio: parseFloat(item.querySelector('.material-precio').value) || 0
-        }));
-    }
-
     // Gestión de clientes
+    exportarClientes() {
+        const csv = this.clientes.exportarCSV();
+        const blob = new Blob([csv], { type: 'text/csv' });
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `clientes_${new Date().toISOString().split('T')[0]}.csv`;
+        a.click();
+        window.URL.revokeObjectURL(url);
+    }
+
+    async importarClientes(event) {
+        const file = event.target.files[0];
+        if (file) {
+            try {
+                const content = await file.text();
+                const resultado = this.clientes.importarCSV(content);
+                this.mostrarNotificacion(
+                    `Importación completada: ${resultado.exitosos} exitosos, ${resultado.fallidos} fallidos`,
+                    resultado.fallidos > 0 ? 'warning' : 'success'
+                );
+                this.actualizarListaClientes();
+            } catch (error) {
+                this.mostrarNotificacion('Error al importar clientes', 'error');
+            }
+        }
+        event.target.value = '';
+    }
+
     actualizarListaClientes() {
         const clientes = this.clientes.obtenerTodos();
         const select = this.elements.clientesSelect;
@@ -340,26 +341,31 @@ class App {
     }
 
     guardarCliente() {
-        const clienteData = {
-            nombre: this.elements.clienteNombre.value.trim(),
-            direccion: this.elements.clienteDireccion.value.trim(),
-            telefono: this.elements.clienteTelefono.value.trim(),
-            email: this.elements.clienteEmail.value.trim()
-        };
+        console.log('Iniciando guardado de cliente');
+        try {
+            const clienteData = {
+                nombre: this.elements.clienteNombre.value.trim(),
+                direccion: this.elements.clienteDireccion.value.trim(),
+                telefono: this.elements.clienteTelefono.value.trim(),
+                email: this.elements.clienteEmail.value.trim()
+            };
 
-        if (!clienteData.nombre) {
-            this.mostrarNotificacion('El nombre del cliente es requerido', 'error');
-            return;
+            console.log('Datos del cliente a guardar:', clienteData);
+
+            if (!clienteData.nombre) {
+                this.mostrarNotificacion('El nombre del cliente es requerido', 'error');
+                return;
+            }
+
+            this.clientes.guardar(clienteData);
+            this.actualizarListaClientes();
+            this.mostrarNotificacion('Cliente guardado exitosamente', 'success');
+            
+            console.log('Cliente guardado correctamente');
+        } catch (error) {
+            console.error('Error al guardar cliente:', error);
+            this.mostrarNotificacion('Error al guardar cliente: ' + error.message, 'error');
         }
-
-        if (clienteData.email && !this.validarEmail(clienteData.email)) {
-            this.mostrarNotificacion('El email no es válido', 'error');
-            return;
-        }
-
-        this.clientes.guardar(clienteData);
-        this.actualizarListaClientes();
-        this.mostrarNotificacion('Cliente guardado exitosamente', 'success');
     }
 
     nuevoCliente() {
@@ -389,6 +395,58 @@ class App {
         this.config.guardarConfig(configData);
         this.toggleConfigPanel();
         this.mostrarNotificacion('Configuración guardada exitosamente', 'success');
+    }
+
+    // Métodos de UI
+    toggleConfigPanel() {
+        this.elements.configPanel.classList.toggle('hidden');
+    }
+
+    toggleTheme() {
+        const currentTheme = document.body.getAttribute('data-theme');
+        const newTheme = currentTheme === 'light' ? 'dark' : 'light';
+        document.body.setAttribute('data-theme', newTheme);
+        localStorage.setItem('theme', newTheme);
+        this.updateThemeButton(newTheme);
+    }
+
+    updateThemeButton(theme) {
+        if (this.elements.btnTheme) {
+            this.elements.btnTheme.textContent = theme === 'light' ? '🌙' : '☀️';
+        }
+    }
+
+    // Cálculos y actualizaciones
+    actualizarTotales() {
+        const materiales = this.obtenerMateriales();
+        const ivaPorcentaje = parseFloat(this.elements.cotizacionIva.value) || 0;
+        const descuento = parseFloat(this.elements.cotizacionDescuento.value) || 0;
+        const anticipo = parseFloat(this.elements.pagoAnticipo.value) || 0;
+
+        // Actualizar cotización
+        this.cotizacion.actualizarDatos({
+            materiales,
+            ivaPorcentaje,
+            descuento,
+            anticipo
+        });
+
+        // Actualizar UI
+        this.elements.subtotal.textContent = this.formatearMoneda(this.cotizacion.subtotal);
+        this.elements.descuento.textContent = this.formatearMoneda(this.cotizacion.descuento);
+        this.elements.iva.textContent = this.formatearMoneda(this.cotizacion.iva);
+        this.elements.total.textContent = this.formatearMoneda(this.cotizacion.total);
+        this.elements.ivaPorcentaje.textContent = ivaPorcentaje;
+        this.elements.anticipoDisplay.textContent = this.formatearMoneda(anticipo);
+        this.elements.pendiente.textContent = this.formatearMoneda(this.cotizacion.total - anticipo);
+    }
+
+    obtenerMateriales() {
+        return Array.from(this.elements.listaMateriales.children).map(item => ({
+            nombre: item.querySelector('.material-nombre').value,
+            cantidad: parseFloat(item.querySelector('.material-cantidad').value) || 0,
+            precio: parseFloat(item.querySelector('.material-precio').value) || 0
+        }));
     }
 
     // Gestión de cotizaciones
@@ -501,17 +559,25 @@ class App {
     }
 
     mostrarNotificacion(mensaje, tipo = 'info') {
-        // Crear elemento de notificación
+        console.log(`Notificación (${tipo}):`, mensaje);
+        
         const notificacion = document.createElement('div');
         notificacion.className = `notificacion ${tipo}`;
         notificacion.textContent = mensaje;
-
-        // Agregar al DOM
-        document.body.appendChild(notificacion);
-
+        
+        // Asegurarse de que el contenedor existe
+        let contenedor = document.getElementById('notificaciones-container');
+        if (!contenedor) {
+            contenedor = document.createElement('div');
+            contenedor.id = 'notificaciones-container';
+            document.body.appendChild(contenedor);
+        }
+        
+        contenedor.appendChild(notificacion);
+        
         // Animar entrada
         setTimeout(() => notificacion.classList.add('visible'), 100);
-
+        
         // Remover después de 3 segundos
         setTimeout(() => {
             notificacion.classList.remove('visible');
@@ -533,5 +599,4 @@ document.addEventListener('DOMContentLoaded', () => {
     window.app = new App();
 });
 
-// Exportar la clase App
 export default App;
