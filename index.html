@@ -3,274 +3,251 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Cotizador</title>
-    
-    <!-- Bootstrap CSS -->
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
-    <!-- Font Awesome para iconos -->
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css" rel="stylesheet">
-    
-    <style>
-        .container { max-width: 1200px; }
-        .nav-tabs { margin-bottom: 20px; }
-        .acciones-clientes { margin: 20px 0; }
-        .btn { margin-right: 10px; }
-        .table th { background-color: #f8f9fa; }
-        .form-group { margin-bottom: 15px; }
-        .alert { margin-top: 20px; }
-        
-        /* Estilos para dispositivos móviles */
-        @media (max-width: 768px) {
-            .btn { margin-bottom: 10px; width: 100%; }
-            .table-responsive { margin-bottom: 20px; }
-        }
-    </style>
+    <title>Cotizador StableBuilds</title>
+    <link rel="stylesheet" href="styles/main.css">
+    <link rel="stylesheet" href="styles/brands/construccion.css">
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#2196F3">
+    <link rel="icon" type="image/png" href="assets/logos/construccion.png">
 </head>
-<body>
-    <div class="container mt-4">
-        <!-- Pestañas de navegación -->
-        <ul class="nav nav-tabs" id="mainTabs" role="tablist">
-            <li class="nav-item" role="presentation">
-                <button class="nav-link active" id="clientes-tab" data-bs-toggle="tab" 
-                        data-bs-target="#clientes" type="button" role="tab">
-                    <i class="fas fa-users"></i> Clientes
-                </button>
-            </li>
-            <li class="nav-item" role="presentation">
-                <button class="nav-link" id="cotizaciones-tab" data-bs-toggle="tab" 
-                        data-bs-target="#cotizaciones" type="button" role="tab">
-                    <i class="fas fa-file-invoice-dollar"></i> Cotizaciones
-                </button>
-            </li>
-        </ul>
+<body class="brand-bg">
+    <div id="app">
+        <!-- Header -->
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <!-- Agregar esta línea -->
+        <meta http-equiv="Content-Security-Policy" content="default-src 'self' https: 'unsafe-inline' 'unsafe-eval'; img-src 'self' data: https:;">
+        <title>Cotizador StableBuilds</title>
+        <header class="brand-primary-bg">
+            <img src="assets/logos/construccion.png" alt="Logo StableBuilds" class="logo-principal">
+            <h1 class="brand-secondary-text">Cotizador</h1>
+            <div class="header-buttons">
+                <button id="btn-config" class="btn-icon" title="Configuración">⚙️</button>
+                <button id="btn-theme" class="btn-icon" title="Cambiar tema">🌓</button>
+            </div>
+        </header>
 
-        <!-- Contenido de las pestañas -->
-        <div class="tab-content" id="mainTabsContent">
-            <!-- Pestaña de Clientes -->
-            <div class="tab-pane fade show active" id="clientes" role="tabpanel">
-                <div class="row mb-3">
-                    <div class="col-md-6">
-                        <h2>Gestión de Clientes</h2>
+        <!-- Contenedor principal -->
+        <main>
+            <!-- Panel de Configuración -->
+            <section id="config-section" class="config-panel hidden">
+                <div class="panel-header">
+                    <h2>Configuración de Empresa</h2>
+                    <button class="btn-close" id="btn-close-config">×</button>
+                </div>
+                <div class="panel-content">
+                    <div class="input-group">
+                        <label for="config-empresa">Nombre:</label>
+                        <input type="text" id="config-empresa" placeholder="StableBuilds">
                     </div>
-                    <div class="col-md-6 text-end">
-                        <button id="btnNuevoCliente" class="btn btn-success">
-                            <i class="fas fa-plus"></i> Nuevo Cliente
+                    <div class="input-group">
+                        <label for="config-direccion">Dirección:</label>
+                        <input type="text" id="config-direccion">
+                    </div>
+                    <div class="input-group">
+                        <label for="config-telefono">Teléfono:</label>
+                        <input type="tel" id="config-telefono">
+                    </div>
+                    <div class="input-group">
+                        <label for="config-email">Email:</label>
+                        <input type="email" id="config-email">
+                    </div>
+                    <div class="input-group">
+                        <label for="config-web">Sitio Web:</label>
+                        <input type="url" id="config-web" placeholder="https://stablebuilds.com">
+                    </div>
+                    <button id="btn-guardar-config" class="btn btn-primary">Guardar</button>
+                </div>
+            </section>
+
+            <!-- Formulario de Cotización -->
+            <section id="form-cotizacion" class="cotizacion-container">
+                <div class="two-columns">
+                    <!-- Datos del Cliente -->
+                    <div class="column">
+                        <div class="card">
+                            <h2 class="card-title">Datos del Cliente</h2>
+                            <div class="client-selection">
+                                <div class="input-group">
+                                    <label for="clientes-guardados">Clientes Guardados:</label>
+                                    <select id="clientes-guardados" class="brand-input">
+                                        <option value="">-- Seleccionar cliente --</option>
+                                    </select>
+                                </div>
+                                <div class="button-group">
+                                    <button id="btn-guardar-cliente" class="btn btn-secondary">
+                                        <span class="icon">💾</span> Guardar Cliente
+                                    </button>
+                                    <button id="btn-nuevo-cliente" class="btn btn-outline">
+                                        <span class="icon">➕</span> Nuevo
+                                    </button>
+                                </div>
+                            </div>
+                            <div class="client-form">
+                                <div class="input-group">
+                                    <label for="cliente-nombre">Nombre:</label>
+                                    <input type="text" id="cliente-nombre" class="brand-input" required>
+                                </div>
+                                <div class="input-group">
+                                    <label for="cliente-direccion">Dirección:</label>
+                                    <input type="text" id="cliente-direccion" class="brand-input">
+                                </div>
+                                <div class="input-group">
+                                    <label for="cliente-telefono">Teléfono:</label>
+                                    <input type="tel" id="cliente-telefono" class="brand-input">
+                                </div>
+                                <div class="input-group">
+                                    <label for="cliente-email">Email:</label>
+                                    <input type="email" id="cliente-email" class="brand-input">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Configuración de Cotización -->
+                    <div class="column">
+                        <div class="card">
+                            <h2 class="card-title">Configuración</h2>
+                            <div class="input-group">
+                                <label for="cotizacion-folio">Folio:</label>
+                                <input type="text" id="cotizacion-folio" class="brand-input" value="SB-2023-001">
+                            </div>
+                            <div class="input-group">
+                                <label for="cotizacion-iva">IVA (%):</label>
+                                <input type="number" id="cotizacion-iva" class="brand-input" value="16" min="0" max="100">
+                            </div>
+                            <div class="input-group">
+                                <label for="cotizacion-descuento">Descuento ($):</label>
+                                <input type="number" id="cotizacion-descuento" class="brand-input" value="0" min="0">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                    <!-- Agregar esto en la sección de gestión de clientes -->
+                    <div class="client-actions">
+                        <button id="btn-exportar-clientes" class="btn btn-secondary">
+                            <span class="icon">📤</span> Exportar Clientes
+                        </button>
+                        <input type="file" id="input-importar-clientes" accept=".csv" style="display: none;">
+                        <button id="btn-importar-clientes" class="btn btn-secondary">
+                            <span class="icon">📥</span> Importar Clientes
                         </button>
                     </div>
+                    
+
+                <!-- Lista de Materiales -->
+                <div class="card">
+                    <div class="card-header">
+                        <h2 class="card-title">Materiales y Servicios</h2>
+                        <button id="btn-add-material" class="btn btn-primary">
+                            <span class="icon">➕</span> Agregar Concepto
+                        </button>
+                    </div>
+                    <div id="lista-materiales" class="items-container">
+                        <!-- Los items se agregarán dinámicamente -->
+                    </div>
                 </div>
 
-                <!-- Acciones de importación/exportación -->
-                <div class="acciones-clientes">
-                    <button id="btnImportarClientes" class="btn btn-primary">
-                        <i class="fas fa-file-import"></i> Importar Clientes
-                    </button>
-                    <button id="btnExportarClientes" class="btn btn-secondary">
-                        <i class="fas fa-file-export"></i> Exportar Clientes
-                    </button>
-                </div>
-
-                <!-- Buscador de clientes -->
-                <div class="row mb-3">
-                    <div class="col">
-                        <div class="input-group">
-                            <span class="input-group-text">
-                                <i class="fas fa-search"></i>
-                            </span>
-                            <input type="text" id="buscarCliente" class="form-control" 
-                                   placeholder="Buscar cliente...">
+                <!-- Pagos y Adelantos -->
+                <div class="card">
+                    <h2 class="card-title">Pagos y Adelantos</h2>
+                    <div class="two-columns">
+                        <div class="column">
+                            <div class="input-group">
+                                <label for="pago-anticipo">Anticipo ($):</label>
+                                <input type="number" id="pago-anticipo" class="brand-input" value="0" min="0">
+                            </div>
+                            <div class="input-group">
+                                <label for="fecha-anticipo">Fecha de anticipo:</label>
+                                <input type="date" id="fecha-anticipo" class="brand-input">
+                            </div>
+                        </div>
+                        <div class="column">
+                            <div class="input-group">
+                                <label for="forma-pago">Forma de pago:</label>
+                                <select id="forma-pago" class="brand-input">
+                                    <option value="Efectivo">Efectivo</option>
+                                    <option value="Transferencia">Transferencia</option>
+                                    <option value="Depósito">Depósito</option>
+                                    <option value="Cheque">Cheque</option>
+                                    <option value="Tarjeta">Tarjeta</option>
+                                </select>
+                            </div>
+                            <div class="input-group">
+                                <label for="notas-pago">Notas de pago:</label>
+                                <input type="text" id="notas-pago" class="brand-input" placeholder="Referencia, cuenta, etc.">
+                            </div>
                         </div>
                     </div>
                 </div>
 
-                <!-- Tabla de clientes -->
-                <div class="table-responsive">
-                    <table class="table table-striped table-hover">
-                        <thead>
-                            <tr>
-                                <th>Nombre</th>
-                                <th>Email</th>
-                                <th>Teléfono</th>
-                                <th>Dirección</th>
-                                <th>Acciones</th>
-                            </tr>
-                        </thead>
-                        <tbody id="tablaClientes">
-                            <!-- Los clientes se cargarán dinámicamente aquí -->
-                        </tbody>
-                    </table>
+                <!-- Totales -->
+                <div class="card totals-card">
+                    <div class="totals-grid">
+                        <div class="total-row">
+                            <span class="total-label">Subtotal:</span>
+                            <span id="subtotal" class="total-value">$0.00</span>
+                        </div>
+                        <div class="total-row">
+                            <span class="total-label">Descuento:</span>
+                            <span id="descuento" class="total-value discount">$0.00</span>
+                        </div>
+                        <div class="total-row">
+                            <span class="total-label">IVA (<span id="iva-porcentaje">16</span>%):</span>
+                            <span id="iva" class="total-value">$0.00</span>
+                        </div>
+                        <div class="total-row grand-total">
+                            <span class="total-label">TOTAL:</span>
+                            <span id="total" class="total-value">$0.00</span>
+                        </div>
+                        <div class="total-row">
+                            <span class="total-label">Anticipo:</span>
+                            <span id="anticipo-display" class="total-value advance">$0.00</span>
+                        </div>
+                        <div class="total-row pending-total">
+                            <span class="total-label">PENDIENTE DE PAGO:</span>
+                            <span id="pendiente" class="total-value pending">$0.00</span>
+                        </div>
+                    </div>
                 </div>
-            </div>
 
-            <!-- Pestaña de Cotizaciones -->
-            <div class="tab-pane fade" id="cotizaciones" role="tabpanel">
-                <h2>Cotizaciones</h2>
-                <!-- Contenido de cotizaciones -->
-            </div>
-        </div>
-    </div>
-
-    <!-- Modal para Cliente -->
-    <div class="modal fade" id="modalCliente" tabindex="-1">
-        <div class="modal-dialog">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title" id="modalClienteTitulo">Nuevo Cliente</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                </div>
-                <div class="modal-body">
-                    <form id="formCliente">
-                        <input type="hidden" id="clienteId">
-                        <div class="form-group">
-                            <label for="nombre">Nombre *</label>
-                            <input type="text" class="form-control" id="nombre" required>
-                        </div>
-                        <div class="form-group">
-                            <label for="email">Email</label>
-                            <input type="email" class="form-control" id="email">
-                        </div>
-                        <div class="form-group">
-                            <label for="telefono">Teléfono</label>
-                            <input type="tel" class="form-control" id="telefono">
-                        </div>
-                        <div class="form-group">
-                            <label for="direccion">Dirección</label>
-                            <textarea class="form-control" id="direccion"></textarea>
-                        </div>
-                    </form>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
-                        Cancelar
+                <!-- Botones de Acción -->
+                <div class="action-buttons">
+                    <button id="btn-guardar" class="btn btn-secondary">
+                        <span class="icon">💾</span> Guardar
                     </button>
-                    <button type="button" class="btn btn-primary" id="btnGuardarCliente">
-                        Guardar
+                    <button id="btn-generar-pdf" class="btn btn-primary">
+                        <span class="icon">📄</span> Generar PDF
                     </button>
                 </div>
+            </section>
+        </main>
+
+        <!-- Footer -->
+        <footer class="brand-primary-bg">
+            <img src="assets/logos/skillhub.png" alt="Logo SkillHub" class="logo-secundario">
+            <div class="footer-text">
+                <p>© 2025 StableBuilds</p>
+                <p>Versión 1.0.0</p>
             </div>
-        </div>
+        </footer>
     </div>
+
+    <!-- Templates -->
+    <template id="template-material">
+        <div class="material-item">
+            <button class="btn-icon btn-eliminar" title="Eliminar concepto">🗑️</button>
+            <input type="text" class="material-nombre brand-input" placeholder="Descripción" required>
+            <input type="number" class="material-cantidad brand-input" placeholder="Cant." min="1" value="1" required>
+            <input type="number" class="material-precio brand-input" placeholder="P. Unitario" min="0" step="0.01" value="0" required>
+            <span class="material-total">$0.00</span>
+        </div>
+    </template>
 
     <!-- Scripts -->
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
-    <script type="module">
-        import { Clientes } from './js/clientes.js';
-        import { ClienteForm } from './js/cliente-form.js';
-
-        // Cuando el documento esté listo
-        document.addEventListener('DOMContentLoaded', () => {
-            const gestorClientes = new Clientes();
-            const formularioClientes = new ClienteForm(gestorClientes);
-
-            // Función para cargar la tabla de clientes
-            function cargarTablaClientes() {
-                const clientes = gestorClientes.obtenerTodos();
-                const tabla = document.getElementById('tablaClientes');
-                tabla.innerHTML = '';
-
-                clientes.forEach(cliente => {
-                    const fila = document.createElement('tr');
-                    fila.innerHTML = `
-                        <td>${cliente.nombre}</td>
-                        <td>${cliente.email || ''}</td>
-                        <td>${cliente.telefono || ''}</td>
-                        <td>${cliente.direccion || ''}</td>
-                        <td>
-                            <button class="btn btn-sm btn-primary editar-cliente" data-id="${cliente.id}">
-                                <i class="fas fa-edit"></i>
-                            </button>
-                            <button class="btn btn-sm btn-danger eliminar-cliente" data-id="${cliente.id}">
-                                <i class="fas fa-trash"></i>
-                            </button>
-                        </td>
-                    `;
-                    tabla.appendChild(fila);
-                });
-            }
-
-            // Manejador para nuevo cliente
-            document.getElementById('btnNuevoCliente').addEventListener('click', () => {
-                document.getElementById('formCliente').reset();
-                document.getElementById('clienteId').value = '';
-                document.getElementById('modalClienteTitulo').textContent = 'Nuevo Cliente';
-                new bootstrap.Modal(document.getElementById('modalCliente')).show();
-            });
-
-            // Manejador para guardar cliente
-            document.getElementById('btnGuardarCliente').addEventListener('click', () => {
-                const cliente = {
-                    id: document.getElementById('clienteId').value,
-                    nombre: document.getElementById('nombre').value,
-                    email: document.getElementById('email').value,
-                    telefono: document.getElementById('telefono').value,
-                    direccion: document.getElementById('direccion').value
-                };
-
-                try {
-                    gestorClientes.guardar(cliente);
-                    bootstrap.Modal.getInstance(document.getElementById('modalCliente')).hide();
-                    cargarTablaClientes();
-                } catch (error) {
-                    alert(error.message);
-                }
-            });
-
-            // Manejador para buscar clientes
-            document.getElementById('buscarCliente').addEventListener('input', (e) => {
-                const termino = e.target.value;
-                const resultados = termino ? gestorClientes.buscar(termino) : gestorClientes.obtenerTodos();
-                const tabla = document.getElementById('tablaClientes');
-                tabla.innerHTML = '';
-
-                resultados.forEach(cliente => {
-                    // Similar al código de cargarTablaClientes pero solo para los resultados filtrados
-                    const fila = document.createElement('tr');
-                    fila.innerHTML = `
-                        <td>${cliente.nombre}</td>
-                        <td>${cliente.email || ''}</td>
-                        <td>${cliente.telefono || ''}</td>
-                        <td>${cliente.direccion || ''}</td>
-                        <td>
-                            <button class="btn btn-sm btn-primary editar-cliente" data-id="${cliente.id}">
-                                <i class="fas fa-edit"></i>
-                            </button>
-                            <button class="btn btn-sm btn-danger eliminar-cliente" data-id="${cliente.id}">
-                                <i class="fas fa-trash"></i>
-                            </button>
-                        </td>
-                    `;
-                    tabla.appendChild(fila);
-                });
-            });
-
-            // Delegación de eventos para editar y eliminar
-            document.getElementById('tablaClientes').addEventListener('click', (e) => {
-                const target = e.target.closest('button');
-                if (!target) return;
-
-                const id = target.dataset.id;
-                
-                if (target.classList.contains('editar-cliente')) {
-                    const cliente = gestorClientes.obtenerPorId(id);
-                    if (cliente) {
-                        document.getElementById('clienteId').value = cliente.id;
-                        document.getElementById('nombre').value = cliente.nombre;
-                        document.getElementById('email').value = cliente.email || '';
-                        document.getElementById('telefono').value = cliente.telefono || '';
-                        document.getElementById('direccion').value = cliente.direccion || '';
-                        document.getElementById('modalClienteTitulo').textContent = 'Editar Cliente';
-                        new bootstrap.Modal(document.getElementById('modalCliente')).show();
-                    }
-                } else if (target.classList.contains('eliminar-cliente')) {
-                    if (confirm('¿Está seguro de eliminar este cliente?')) {
-                        gestorClientes.eliminar(id);
-                        cargarTablaClientes();
-                    }
-                }
-            });
-
-            // Cargar la tabla inicial
-            cargarTablaClientes();
-        });
-    </script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script type="module" src="js/app.js"></script>
+    
 </body>
 </html>
