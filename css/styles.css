@@ -1,0 +1,226 @@
+/* Estilos personalizados para Cotizaciones Pro */
+
+/* Paleta de colores */
+:root {
+    --primary-color: #4CAF50; /* Verde principal */
+    --secondary-color: #FFC107; /* Amarillo secundario */
+    --accent-color: #2196F3; /* Azul de acento */
+    --background-color: #f4f4f4; /* Fondo general */
+    --text-color: #333; /* Color de texto principal */
+    --bs-dark: #343a40; /* Sobrescribir color oscuro de Bootstrap */
+    --bs-light: #f8f9fa; /* Sobrescribir color claro de Bootstrap */
+}
+
+body {
+    font-family: 'Roboto', sans-serif; /* Fuente principal */
+    background-color: var(--background-color);
+    color: var(--text-color);
+    line-height: 1.6;
+}
+
+header {
+    background-color: var(--bs-dark) !important; /* Usar variable Bootstrap o personalizada */
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+header h1 {
+    font-family: 'Montserrat', sans-serif; /* Fuente para el título principal */
+    font-weight: 700;
+    color: var(--primary-color); /* Color primario para el título */
+}
+
+.nav-link {
+    color: var(--bs-light) !important; /* Color claro para enlaces de navegación */
+}
+
+.nav-link:hover, .nav-link.active {
+    color: var(--secondary-color) !important; /* Color secundario para hover y activo */
+}
+
+.nav-tabs .nav-link {
+    border: 1px solid transparent;
+    border-top-left-radius: .25rem;
+    border-top-right-radius: .25rem;
+    color: var(--primary-color); /* Color primario para pestañas */
+}
+
+.nav-tabs .nav-link.active {
+    color: var(--bs-dark);
+    background-color: var(--background-color);
+    border-color: #dee2e6 #dee2e6 var(--background-color);
+}
+
+.tab-content {
+    background-color: #fff;
+    padding: 20px;
+    border: 1px solid #dee2e6;
+    border-top: none;
+    border-bottom-left-radius: .25rem;
+    border-bottom-right-radius: .25rem;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+}
+
+/* Estilos para botones */
+.btn-primary {
+    background-color: var(--primary-color);
+    border-color: var(--primary-color);
+}
+
+.btn-primary:hover {
+    background-color: darken(var(--primary-color), 10%);
+    border-color: darken(var(--primary-color), 10%);
+}
+
+.btn-secondary {
+    background-color: var(--secondary-color);
+    border-color: var(--secondary-color);
+    color: var(--bs-dark);
+}
+
+.btn-secondary:hover {
+    background-color: darken(var(--secondary-color), 10%);
+    border-color: darken(var(--secondary-color), 10%);
+    color: var(--bs-dark);
+}
+
+/* Formularios */
+.form-control:focus {
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 0.25rem rgba(var(--primary-color), 0.25);
+}
+
+/* Tarjetas (Cards) */
+.card {
+    border: none;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+
+.card-header {
+    background-color: var(--primary-color);
+    color: white;
+    font-weight: bold;
+}
+
+/* Iconos */
+.fas {
+    margin-right: 0.5rem; /* Espacio a la derecha de los iconos Font Awesome */
+}
+
+/* Clases de utilidad */
+.text-primary {
+    color: var(--primary-color) !important;
+}
+
+.text-secondary {
+    color: var(--secondary-color) !important;
+}
+
+.bg-primary-light {
+    background-color: rgba(var(--primary-color), 0.1); /* Un fondo claro con el color primario */
+}
+
+/* Responsive adjustments */
+
+/* General adjustments for smaller screens */
+@media (max-width: 767.98px) {
+    header h1 {
+        font-size: 1.5rem; /* Slightly smaller title on mobile */
+    }
+
+    /* Make main tab navigation stack vertically on small screens */
+    #mainTabs {
+        flex-direction: column;
+    }
+    #mainTabs .nav-item {
+        width: 100%;
+    }
+    #mainTabs .nav-link {
+        border-radius: 0.25rem; /* Consistent border radius */
+        margin-bottom: 2px;   /* Space between stacked tabs */
+        text-align: center;   /* Center text for stacked tabs */
+        border: 1px solid #dee2e6; /* Add border for clarity */
+    }
+    #mainTabs .nav-link.active {
+        background-color: var(--primary-color);
+        color: white !important; /* Ensure text is readable */
+        border-color: var(--primary-color); /* Ensure active tab border matches background */
+    }
+    .tab-content > .tab-pane {
+        padding-top: 1rem;
+    }
+
+    /* User Auth Nav in Header - Bootstrap's collapse should handle this.
+       If specific styling is needed when NOT collapsed but on small screen, add here.
+       For now, assuming Bootstrap's default collapse is primary mechanism. */
+    #userAuthNav {
+        /* No special rules needed if relying on navbar-collapse */
+    }
+    #userAuthNav .nav-item {
+        /* No special rules needed if relying on navbar-collapse */
+    }
+
+    /* Add some space below columns when they stack on mobile */
+    .row > [class*="col-"] { /* Targets col-, col-sm-, col-md-, etc. */
+        margin-bottom: 1rem; /* Add space below stacked columns */
+    }
+    .row > [class*="col-"]:last-child {
+        margin-bottom: 0; /* No margin for the last column in a row */
+    }
+}
+
+/* Medium devices (tablets, 768px and up) */
+@media (min-width: 768px) {
+    /* Revert mainTabs to horizontal if needed, Bootstrap default is row but good to be explicit */
+    #mainTabs {
+        flex-direction: row;
+    }
+    #mainTabs .nav-item {
+        width: auto; /* Default width */
+    }
+    #mainTabs .nav-link {
+        border: 1px solid transparent; /* Restore original border for non-active */
+        border-bottom: none; /* Nav-tabs typically only have bottom border on active or none */
+        margin-bottom: -1px; /* Overlap bottom border of nav for active tab connection */
+        text-align: left; /* Or inherit, revert from center */
+    }
+    #mainTabs .nav-link.active {
+        /* Original active styles from above are mostly fine, but ensure border connects */
+         border-color: #dee2e6 #dee2e6 var(--background-color); /* Original from general styles */
+    }
+
+    /* Revert column stacking margin if needed, though usually fine */
+    .row > [class*="col-"] {
+        margin-bottom: 0; /* Bootstrap rows handle gutter and mb by default on larger screens */
+    }
+}
+
+/* Further adjustments for very small screens if necessary (e.g., phones < 576px) */
+@media (max-width: 575.98px) {
+    header h1 {
+        font-size: 1.3rem;
+    }
+    /* Reduce padding for containers on very small screens */
+    .container, .container-fluid {
+        padding-left: 0.5rem;
+        padding-right: 0.5rem;
+    }
+    .card-body, .modal-body {
+        padding: 0.75rem;
+    }
+    .modal-header, .modal-footer {
+        padding: 0.5rem 0.75rem;
+    }
+    .display-6 { /* If used for titles within cards or sections */
+        font-size: 1.75rem;
+    }
+    /* Ensure buttons in forms or action areas are full width or stack well */
+    .d-grid .btn, .btn-block { /* .btn-block is older, d-grid is newer */
+        width: 100%;
+    }
+    .form-actions .btn { /* If you have a specific class for form action button containers */
+        margin-bottom: 0.5rem;
+    }
+    .form-actions .btn:last-child {
+        margin-bottom: 0;
+    }
+}

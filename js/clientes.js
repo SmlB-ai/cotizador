@@ -1,277 +1,274 @@
-/**
- * Clase para la gestión de clientes
- * Maneja el almacenamiento local y la validación de datos
- */
-export class Clientes {
-    constructor() {
-        this.storageKey = 'cotizador_clientes';
-        this.clientesCache = null;
-        this.inicializarDB();
-    }
+// js/clientes.js
+// Manages the "Clientes" tab functionality
 
-    /**
-     * Inicializa la base de datos local
-     */
-    inicializarDB() {
-        if (!localStorage.getItem(this.storageKey)) {
-            localStorage.setItem(this.storageKey, JSON.stringify([]));
+window.clientesModule = {
+    isInitialized: false,
+    editingClientId: null, // Moved from global scope to module scope
+
+    init: function() {
+        if (this.isInitialized) {
+            // console.log("Clientes module already initialized.");
+            // this.loadClients(); // Optionally refresh clients if tab is re-focused
+            return;
         }
-    }
+        console.log("Clientes module initializing...");
 
-    /**
-     * Obtiene todos los clientes ordenados por nombre
-     * @returns {Array} Lista de clientes
-     */
-    obtenerTodos() {
-        if (!this.clientesCache) {
-            const clientes = JSON.parse(localStorage.getItem(this.storageKey) || '[]');
-            // Ordenar por nombre
-            clientes.sort((a, b) => a.nombre.localeCompare(b.nombre));
-            this.clientesCache = clientes;
+        // Ensure Firebase is available
+        if (typeof firebase === 'undefined' || typeof firebase.firestore === 'undefined') {
+            console.error("Firebase or Firestore is not loaded. Client module cannot start.");
+            const clientListTableBodyNode = document.getElementById('clientListTableBody');
+            if (clientListTableBodyNode) {
+                clientListTableBodyNode.innerHTML = '<tr><td colspan="6" class="text-center text-danger">Error: Firebase no está configurado. Contacte al administrador.</td></tr>';
+            }
+            return;
         }
-        return this.clientesCache;
-    }
+        const db = firebase.firestore();
 
-    /**
-     * Busca clientes por nombre o correo
-     * @param {string} termino - Término de búsqueda
-     * @returns {Array} Clientes que coinciden con la búsqueda
-     */
-    buscar(termino) {
-        const terminoLower = termino.toLowerCase();
-        return this.obtenerTodos().filter(cliente => 
-            cliente.nombre.toLowerCase().includes(terminoLower) ||
-            (cliente.email && cliente.email.toLowerCase().includes(terminoLower))
-        );
-    }
+        // Cache DOM Elements (make them properties of the module or local consts if only used in init)
+        // For simplicity, making them local to init and functions will re-query or be passed them.
+        // A more performant approach might cache them on `this.` if frequently accessed by other module methods.
+        const btnAgregarCliente = document.getElementById('btnAgregarCliente');
+        const clientFormContainer = document.getElementById('clientFormContainer');
+        const clientForm = document.getElementById('clientForm');
+        const clientFormTitle = document.getElementById('clientFormTitle');
+        const editingClientIdInput = document.getElementById('editingClientId');
+        const clientNameInput = document.getElementById('clientName');
+        const clientPhoneInput = document.getElementById('clientPhone');
+        const clientEmailInput = document.getElementById('clientEmail');
+        const clientTypeSelect = document.getElementById('clientType');
+        const clientRFCInput = document.getElementById('clientRFC');
+        const clientIsFavoriteCheckbox = document.getElementById('clientIsFavorite');
+        const clientAddressTextarea = document.getElementById('clientAddress');
+        const clientNotesTextarea = document.getElementById('clientNotes');
+        // const btnSaveClient = document.getElementById('btnSaveClient'); // Handled by form submit
+        const btnCancelClientForm = document.getElementById('btnCancelClientForm');
 
-    /**
-     * Guarda un nuevo cliente o actualiza uno existente
-     * @param {Object} cliente - Datos del cliente
-     * @returns {Object} Cliente guardado con ID
-     */
-    guardar(cliente) {
-        const validacion = this.validarCliente(cliente);
-        if (!validacion.esValido) {
-            throw new Error(validacion.errores.join('\n'));
+        const clientListTableBody = document.getElementById('clientListTableBody');
+        const clientSearchInput = document.getElementById('clientSearchInput');
+        const clientFilterType = document.getElementById('clientFilterType');
+
+        const module = this; // Reference to self for inner functions
+
+        // --- FORM MANAGEMENT (now methods or inner functions) ---
+        function openClientForm(mode = 'new', clientData = null) {
+            module.editingClientId = null;
+            if(editingClientIdInput) editingClientIdInput.value = '';
+            if (clientForm) clientForm.reset();
+
+            if (mode === 'edit' && clientData) {
+                if (clientFormTitle) clientFormTitle.textContent = 'Editar Cliente';
+                module.editingClientId = clientData.id;
+                if (editingClientIdInput) editingClientIdInput.value = clientData.id;
+
+                if (clientNameInput) clientNameInput.value = clientData.nombre || '';
+                if (clientPhoneInput) clientPhoneInput.value = clientData.telefono || '';
+                if (clientEmailInput) clientEmailInput.value = clientData.email || '';
+                if (clientTypeSelect) clientTypeSelect.value = clientData.tipo || 'Particular';
+                if (clientRFCInput) clientRFCInput.value = clientData.rfc || '';
+                if (clientAddressTextarea) clientAddressTextarea.value = clientData.direccion || '';
+                if (clientNotesTextarea) clientNotesTextarea.value = clientData.notas || '';
+                if (clientIsFavoriteCheckbox) clientIsFavoriteCheckbox.checked = clientData.esFavorito || false;
+            } else {
+                if (clientFormTitle) clientFormTitle.textContent = 'Agregar Nuevo Cliente';
+            }
+            if (clientFormContainer) clientFormContainer.style.display = 'block';
         }
 
-        const clientes = this.obtenerTodos();
-        
-        // Verificar si el cliente ya existe
-        const indiceExistente = clientes.findIndex(c => 
-            c.id === cliente.id || 
-            (c.email && c.email === cliente.email) ||
-            (c.nombre === cliente.nombre && c.telefono === cliente.telefono)
-        );
+        function closeClientForm() {
+            if (clientFormContainer) clientFormContainer.style.display = 'none';
+            if (clientForm) clientForm.reset();
+            module.editingClientId = null;
+            if (editingClientIdInput) editingClientIdInput.value = '';
+        }
 
-        if (indiceExistente >= 0) {
-            // Actualizar cliente existente
-            clientes[indiceExistente] = {
-                ...clientes[indiceExistente],
-                ...cliente,
-                actualizado: new Date().toISOString()
+        // --- CRUD FUNCTIONS (now methods or inner functions) ---
+
+        async function saveClient(event) {
+            event.preventDefault();
+
+            const nombre = clientNameInput ? clientNameInput.value.trim() : '';
+            const telefono = clientPhoneInput ? clientPhoneInput.value.trim() : '';
+            const email = clientEmailInput ? clientEmailInput.value.trim() : '';
+
+            if (!nombre || !telefono || !email) {
+                alert("Nombre, Teléfono y Email son campos obligatorios.");
+                return;
+            }
+
+            const clientDataObject = { // Renamed to avoid conflict with clientData parameter name
+                nombre: nombre,
+                telefono: telefono,
+                email: email,
+                tipo: clientTypeSelect ? clientTypeSelect.value : 'Particular',
+                rfc: clientRFCInput ? clientRFCInput.value.trim() : '',
+                direccion: clientAddressTextarea ? clientAddressTextarea.value.trim() : '',
+                notas: clientNotesTextarea ? clientNotesTextarea.value.trim() : '',
+                esFavorito: clientIsFavoriteCheckbox ? clientIsFavoriteCheckbox.checked : false,
             };
-        } else {
-            // Agregar nuevo cliente
-            clientes.push({
-                id: this.generarId(),
-                ...cliente,
-                creado: new Date().toISOString(),
-                actualizado: new Date().toISOString()
-            });
-        }
 
-        this.guardarEnStorage(clientes);
-        return cliente;
-    }
-
-    /**
-     * Elimina un cliente
-     * @param {string} id - ID del cliente
-     * @returns {boolean} true si se eliminó correctamente
-     */
-    eliminar(id) {
-        const clientes = this.obtenerTodos();
-        const indice = clientes.findIndex(c => c.id === id);
-        
-        if (indice >= 0) {
-            clientes.splice(indice, 1);
-            this.guardarEnStorage(clientes);
-            return true;
-        }
-        return false;
-    }
-
-    /**
-     * Busca un cliente por su ID
-     * @param {string} id - ID del cliente
-     * @returns {Object|null} Cliente encontrado o null
-     */
-    obtenerPorId(id) {
-        return this.obtenerTodos().find(c => c.id === id) || null;
-    }
-
-    /**
-     * Exporta todos los clientes a CSV
-     * @returns {string} Contenido CSV
-     */
-    exportarCSV() {
-        const clientes = this.obtenerTodos();
-        const campos = ['nombre', 'direccion', 'telefono', 'email', 'creado', 'actualizado'];
-        
-        const csvContent = [
-            campos.join(','), // Encabezados
-            ...clientes.map(cliente => 
-                campos.map(campo => 
-                    // Escapar comas y comillas en los valores
-                    `"${(cliente[campo] || '').toString().replace(/"/g, '""')}"`
-                ).join(',')
-            )
-        ].join('\n');
-
-        return csvContent;
-    }
-
-    /**
-     * Importa clientes desde CSV
-     * @param {string} csvContent - Contenido CSV
-     * @returns {Object} Resultado de la importación
-     */
-    importarCSV(csvContent) {
-        // Normalizar saltos de línea
-        const contenidoNormalizado = csvContent.replace(/\r\n/g, '\n').replace(/\r/g, '\n');
-        const lineas = contenidoNormalizado.split('\n').filter(linea => linea.trim() !== '');
-        
-        if (lineas.length === 0) {
-            throw new Error('El archivo está vacío');
-        }
-
-        const encabezados = lineas[0].split(',');
-        const resultado = {
-            exitosos: 0,
-            fallidos: 0,
-            errores: []
-        };
-
-        // Procesar cada línea
-        for (let i = 1; i < lineas.length; i++) {
             try {
-                const valores = this.parsearCSVLinea(lineas[i]);
-                if (valores.length !== encabezados.length) continue;
+                if (module.editingClientId) {
+                    clientDataObject.updatedAt = firebase.firestore.FieldValue.serverTimestamp();
+                    await db.collection('clientes').doc(module.editingClientId).update(clientDataObject);
+                    alert('Cliente actualizado con éxito.');
+                } else {
+                    clientDataObject.createdAt = firebase.firestore.FieldValue.serverTimestamp();
+                    await db.collection('clientes').add(clientDataObject);
+                    alert('Cliente guardado con éxito.');
+                }
+                closeClientForm();
+                loadClients();
+            } catch (error) {
+                console.error("Error saving client: ", error);
+                alert(`Error al guardar cliente: ${error.message}`);
+            }
+        }
 
-                const cliente = {};
-                encabezados.forEach((campo, index) => {
-                    cliente[campo.trim()] = valores[index].trim();
+        async function loadClients() {
+            if (!clientListTableBody) return;
+            clientListTableBody.innerHTML = '<tr><td colspan="6" class="text-center">Cargando clientes...</td></tr>';
+
+            const searchTerm = clientSearchInput ? clientSearchInput.value.toLowerCase() : '';
+            const filterTypeVal = clientFilterType ? clientFilterType.value : ''; // Renamed to avoid conflict
+
+            try {
+                let query = db.collection('clientes').orderBy('nombre');
+
+                const snapshot = await query.get();
+                if (snapshot.empty && !searchTerm && !filterTypeVal) {
+                    clientListTableBody.innerHTML = '<tr><td colspan="6" class="text-center">No hay clientes registrados.</td></tr>';
+                    return;
+                }
+
+                clientListTableBody.innerHTML = '';
+                let clientsRendered = 0;
+                snapshot.forEach(doc => {
+                    const client = { id: doc.id, ...doc.data() };
+
+                    if (filterTypeVal && client.tipo !== filterTypeVal) {
+                        return;
+                    }
+                    if (searchTerm && !(client.nombre || '').toLowerCase().includes(searchTerm) && !(client.email || '').toLowerCase().includes(searchTerm) ) {
+                         return;
+                    }
+
+                    renderClientRow(client);
+                    clientsRendered++;
                 });
 
-                this.guardar(cliente);
-                resultado.exitosos++;
-            } catch (error) {
-                resultado.fallidos++;
-                resultado.errores.push(`Línea ${i + 1}: ${error.message}`);
-            }
-        }
-
-        return resultado;
-    }
-
-    /**
-     * Valida los datos de un cliente
-     * @param {Object} cliente - Cliente a validar
-     * @returns {Object} Resultado de la validación
-     */
-    validarCliente(cliente) {
-        const errores = [];
-
-        // Validar nombre
-        if (!cliente.nombre || cliente.nombre.trim().length < 2) {
-            errores.push('El nombre debe tener al menos 2 caracteres');
-        }
-
-        // Validar email si existe
-        if (cliente.email && !this.validarEmail(cliente.email)) {
-            errores.push('El email no es válido');
-        }
-
-        // Validar teléfono si existe
-        if (cliente.telefono && !this.validarTelefono(cliente.telefono)) {
-            errores.push('El teléfono no es válido');
-        }
-
-        return {
-            esValido: errores.length === 0,
-            errores
-        };
-    }
-
-    /**
-     * Guarda los clientes en el almacenamiento local
-     * @param {Array} clientes - Lista de clientes
-     */
-    guardarEnStorage(clientes) {
-        localStorage.setItem(this.storageKey, JSON.stringify(clientes));
-        this.clientesCache = clientes;
-    }
-
-    /**
-     * Genera un ID único para un cliente
-     * @returns {string} ID generado
-     */
-    generarId() {
-        return 'cli_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
-    }
-
-    /**
-     * Valida un email
-     * @param {string} email - Email a validar
-     * @returns {boolean} true si el email es válido
-     */
-    validarEmail(email) {
-        const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-        return re.test(email);
-    }
-
-    /**
-     * Valida un número de teléfono
-     * @param {string} telefono - Teléfono a validar
-     * @returns {boolean} true si el teléfono es válido
-     */
-    validarTelefono(telefono) {
-        // Permite números, espacios, guiones y paréntesis
-        const re = /^[\d\s\-()]+$/;
-        return re.test(telefono) && telefono.replace(/[^\d]/g, '').length >= 8;
-    }
-
-    /**
-     * Parsea una línea de CSV
-     * @param {string} linea - Línea a parsear
-     * @returns {Array} Valores de la línea
-     */
-    parsearCSVLinea(linea) {
-        const valores = [];
-        let valor = '';
-        let dentroDeCampo = false;
-
-        for (let i = 0; i < linea.length; i++) {
-            const char = linea[i];
-            
-            if (char === '"') {
-                if (dentroDeCampo && linea[i + 1] === '"') {
-                    valor += '"';
-                    i++;
-                } else {
-                    dentroDeCampo = !dentroDeCampo;
+                if (clientsRendered === 0) {
+                     clientListTableBody.innerHTML = '<tr><td colspan="6" class="text-center">No se encontraron clientes con los filtros aplicados o no hay clientes registrados.</td></tr>';
                 }
-            } else if (char === ',' && !dentroDeCampo) {
-                valores.push(valor);
-                valor = '';
-            } else {
-                valor += char;
+
+            } catch (error) {
+                console.error("Error loading clients: ", error);
+                clientListTableBody.innerHTML = '<tr><td colspan="6" class="text-center text-danger">Error al cargar clientes.</td></tr>';
             }
         }
-        
-        valores.push(valor);
-        return valores;
+        // Expose loadClients if it needs to be called from outside (e.g. onTabShow)
+        module.loadClients = loadClients;
+
+
+        function renderClientRow(clientData) {
+            const tr = document.createElement('tr');
+            tr.dataset.clientId = clientData.id;
+        tr.innerHTML = `
+            tr.innerHTML = `
+                <td>${clientData.nombre || 'N/A'}</td>
+                <td>${clientData.telefono || 'N/A'}</td>
+                <td>${clientData.email || 'N/A'}</td>
+                <td>${clientData.tipo || 'N/A'}</td>
+                <td>${clientData.esFavorito ? '<i class="fas fa-star text-warning"></i>' : '<i class="far fa-star text-muted"></i>'}</td>
+                <td>
+                    <button class="btn btn-sm btn-info btn-edit-client" title="Editar"><i class="fas fa-edit"></i></button>
+                    <button class="btn btn-sm btn-danger btn-delete-client" title="Eliminar"><i class="fas fa-trash"></i></button>
+                </td>
+            `;
+
+            const editButton = tr.querySelector('.btn-edit-client');
+            if (editButton) editButton.addEventListener('click', () => editClient(clientData.id));
+
+            const deleteButton = tr.querySelector('.btn-delete-client');
+            if (deleteButton) deleteButton.addEventListener('click', () => deleteClient(clientData.id, clientData.nombre));
+
+            if (clientListTableBody) clientListTableBody.appendChild(tr);
+        }
+
+        async function editClient(clientId) {
+            try {
+                const doc = await db.collection('clientes').doc(clientId).get();
+                if (doc.exists) {
+                    openClientForm('edit', { id: doc.id, ...doc.data() });
+                } else {
+                    alert("Cliente no encontrado.");
+                    console.error("Client not found for ID:", clientId);
+                }
+            } catch (error) {
+                console.error("Error fetching client for edit: ", error);
+                alert("Error al cargar datos del cliente para editar.");
+            }
+        }
+
+        async function deleteClient(clientId, clientName) {
+            if (confirm(`¿Está seguro de que desea eliminar a ${clientName}? Esta acción no se puede deshacer.`)) {
+                try {
+                    await db.collection('clientes').doc(clientId).delete();
+                    alert(`${clientName} ha sido eliminado.`);
+                    loadClients();
+                } catch (error) {
+                    console.error("Error deleting client: ", error);
+                    alert(`Error al eliminar cliente: ${error.message}`);
+                }
+            }
+        }
+
+        // This function can be called by other modules if exposed, e.g., window.clientesModule.getClientOptions()
+        module.getClientOptionsForSelect = async function() {
+            const clients = [];
+            try {
+                const snapshot = await db.collection('clientes').orderBy('nombre').get();
+                snapshot.forEach(doc => {
+                    clients.push({ id: doc.id, nombre: doc.data().nombre });
+                });
+            } catch (error) {
+                console.error("Error fetching client names for select:", error);
+            }
+            return clients;
+        };
+
+        // --- EVENT LISTENERS (within init) ---
+        if (btnAgregarCliente) {
+            btnAgregarCliente.addEventListener('click', () => openClientForm('new'));
+        }
+        if (btnCancelClientForm) {
+            btnCancelClientForm.addEventListener('click', closeClientForm);
+        }
+        if (clientForm) {
+            clientForm.addEventListener('submit', saveClient);
+        }
+
+        if (clientSearchInput) {
+            clientSearchInput.addEventListener('input', loadClients);
+        }
+        if (clientFilterType) {
+            clientFilterType.addEventListener('change', loadClients);
+        }
+
+        // Initial load of clients is now handled by app.js calling this init function
+        // when the tab is shown for the first time.
+        // So, we call loadClients directly here as part of initialization.
+        loadClients();
+
+        this.isInitialized = true;
+        console.log("Clientes module Initialized by app.js.");
+    },
+
+    onTabShow: function() {
+        console.log("Clientes tab shown again (via onTabShow).");
+        // Refresh client list if needed, or perform other actions when tab becomes visible again
+        if (this.isInitialized && typeof this.loadClients === 'function') {
+            this.loadClients();
+        }
     }
-}
+};
+// No more DOMContentLoaded listener.

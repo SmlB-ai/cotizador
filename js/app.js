@@ -1,677 +1,289 @@
-// Importamos los módulos necesarios
-import { Cotizacion } from './cotizacion.js';
-import { Config } from './config.js';
-import { Clientes } from './clientes.js';
-import { Historial } from './historial.js';
-import { generarPDF } from './pdf.js';
+// js/app.js - Main application script
 
-class App {
-    constructor() {
-        console.log('Iniciando aplicación...');
-        this.initializeApp();
-    }
-
-    async initializeApp() {
-        try {
-            console.log('Inicializando elementos...');
-            this.initializeElements();
-
-            console.log('Inicializando módulos...');
-            this.config = new Config();
-            this.clientes = new Clientes();
-            this.historial = new Historial();
-            this.cotizacion = new Cotizacion({
-                ivaDefault: 16,
-                descuentoDefault: 0,
-                anticipoDefault: 0
-            });
-
-            console.log('Cargando datos iniciales...');
-            await this.cargarDatosIniciales();
-
-            console.log('Configurando eventos...');
-            this.initializeEventListeners();
-            this.initializeValidationEvents();
-            this.initializeTheme();
-
-            console.log('Iniciando primer material...');
-            this.agregarMaterial();
-
-            console.log('Aplicación iniciada correctamente');
-        } catch (error) {
-            console.error('Error al inicializar la aplicación:', error);
-            this.mostrarNotificacion('Error al iniciar la aplicación', 'error');
-        }
-    }
-    // Inicialización de importación/exportación de clientes (opcional, ejemplo alternativo)
-    initializeImportExport() {
-        const btnExportar = document.getElementById('btnExportarClientes');
-        const btnImportar = document.getElementById('btnImportarClientes');
-        const fileInput = document.getElementById('fileImportarClientes');
-        const statusDiv = document.getElementById('importStatus');
-
-        if (!btnExportar || !btnImportar || !fileInput || !statusDiv) return;
-
-        btnExportar.addEventListener('click', () => {
-            const csv = this.clientes.exportarCSV();
-            const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
-            const link = document.createElement('a');
-            const url = URL.createObjectURL(blob);
-            link.setAttribute('href', url);
-            link.setAttribute('download', `clientes_${new Date().toISOString().split('T')[0]}.csv`);
-            link.style.visibility = 'hidden';
-            document.body.appendChild(link);
-            link.click();
-            document.body.removeChild(link);
-        });
-
-        btnImportar.addEventListener('click', () => {
-            fileInput.click();
-        });
-
-        fileInput.addEventListener('change', async (e) => {
-            if (e.target.files.length === 0) return;
-
-            const file = e.target.files[0];
-            try {
-                const texto = await file.text();
-                console.log('Contenido del archivo:', texto);
-
-                const resultado = this.clientes.importarCSV(texto);
-
-                statusDiv.className = 'alert ' +
-                    (resultado.exitosos > 0 ? 'alert-success' : 'alert-warning');
-                statusDiv.textContent = `Importación completada: ${resultado.exitosos} exitosos, ${resultado.fallos} fallos`;
-                statusDiv.style.display = 'block';
-
-                if (typeof this.clientes.mostrarClientesActuales === 'function') {
-                    this.clientes.mostrarClientesActuales();
-                }
-
-                this.actualizarListaClientes();
-            } catch (error) {
-                console.error('Error al leer archivo:', error);
-                statusDiv.className = 'alert alert-danger';
-                statusDiv.textContent = 'Error al importar: ' + error.message;
-                statusDiv.style.display = 'block';
-            }
-
-            fileInput.value = '';
-        });
-    }
-
-    // Método para actualizar la lista de clientes en la interfaz (ejemplo alternativo)
-    actualizarListaClientes() {
-        const listaClientes = document.getElementById('listaClientes');
-        if (listaClientes) {
-            const clientes = JSON.parse(localStorage.getItem('cotizador_clientes') || '[]');
-            // Aquí puedes actualizar la vista con los clientes si tienes una tabla/lista
-        }
-        // También puedes mantener la lógica existente para el select de clientes
-        if (this.elements && this.elements.clientesSelect) {
-            const clientes = this.clientes.obtenerTodos();
-            const select = this.elements.clientesSelect;
-            while (select.options.length > 1) {
-                select.remove(1);
-            }
-            clientes.forEach((cliente, index) => {
-                const option = new Option(cliente.nombre, index.toString());
-                select.add(option);
-            });
-        }
-    }
-    initializeElements() {
-        this.elements = {
-            // Configuración
-            configPanel: document.getElementById('config-section'),
-            btnConfig: document.getElementById('btn-config'),
-            btnCloseConfig: document.getElementById('btn-close-config'),
-            btnGuardarConfig: document.getElementById('btn-guardar-config'),
-            configEmpresa: document.getElementById('config-empresa'),
-            configDireccion: document.getElementById('config-direccion'),
-            configTelefono: document.getElementById('config-telefono'),
-            configEmail: document.getElementById('config-email'),
-            configWeb: document.getElementById('config-web'),
-            
-            // Tema
-            btnTheme: document.getElementById('btn-theme'),
-            
-            // Cliente
-            clientesSelect: document.getElementById('clientes-guardados'),
-            btnGuardarCliente: document.getElementById('btn-guardar-cliente'),
-            btnNuevoCliente: document.getElementById('btn-nuevo-cliente'),
-            clienteNombre: document.getElementById('cliente-nombre'),
-            clienteDireccion: document.getElementById('cliente-direccion'),
-            clienteTelefono: document.getElementById('cliente-telefono'),
-            clienteEmail: document.getElementById('cliente-email'),
-            
-            // Cotización
-            cotizacionFolio: document.getElementById('cotizacion-folio'),
-            cotizacionIva: document.getElementById('cotizacion-iva'),
-            cotizacionDescuento: document.getElementById('cotizacion-descuento'),
-            
-            // Materiales
-            listaMateriales: document.getElementById('lista-materiales'),
-            btnAddMaterial: document.getElementById('btn-add-material'),
-            templateMaterial: document.getElementById('template-material'),
-            
-            // Pagos
-            pagoAnticipo: document.getElementById('pago-anticipo'),
-            fechaAnticipo: document.getElementById('fecha-anticipo'),
-            formaPago: document.getElementById('forma-pago'),
-            notasPago: document.getElementById('notas-pago'),
-            
-            // Totales
-            subtotal: document.getElementById('subtotal'),
-            descuento: document.getElementById('descuento'),
-            iva: document.getElementById('iva'),
-            total: document.getElementById('total'),
-            ivaPorcentaje: document.getElementById('iva-porcentaje'),
-            anticipoDisplay: document.getElementById('anticipo-display'),
-            pendiente: document.getElementById('pendiente'),
-            
-            // Acciones
-            btnGuardar: document.getElementById('btn-guardar'),
-            btnGenerarPDF: document.getElementById('btn-generar-pdf'),
-
-            // Importación/Exportación
-            btnExportarClientes: document.getElementById('btn-exportar-clientes'),
-            btnImportarClientes: document.getElementById('btn-importar-clientes'),
-            inputImportarClientes: document.getElementById('input-importar-clientes')
-        };
-    }
-
-    cargarDatosIniciales() {
-        // Cargar configuración
-        const configData = this.config.cargarConfig();
-        if (configData) {
-            this.elements.configEmpresa.value = configData.nombre || '';
-            this.elements.configDireccion.value = configData.direccion || '';
-            this.elements.configTelefono.value = configData.telefono || '';
-            this.elements.configEmail.value = configData.email || '';
-            this.elements.configWeb.value = configData.web || '';
-        }
-
-        // Cargar lista de clientes
-        this.actualizarListaClientes();
-
-        // Generar folio automático
-        this.generarFolioAutomatico();
-    }
-
-    initializeEventListeners() {
-        try {
-            // Configuración
-            if (this.elements.btnConfig) {
-                this.elements.btnConfig.addEventListener('click', () => this.toggleConfigPanel());
-            }
-            if (this.elements.btnCloseConfig) {
-                this.elements.btnCloseConfig.addEventListener('click', () => this.toggleConfigPanel());
-            }
-            if (this.elements.btnGuardarConfig) {
-                this.elements.btnGuardarConfig.addEventListener('click', () => this.guardarConfiguracion());
-            }
-
-            // Tema
-            if (this.elements.btnTheme) {
-                this.elements.btnTheme.addEventListener('click', () => this.toggleTheme());
-            }
-
-            // Clientes
-            if (this.elements.clientesSelect) {
-                this.elements.clientesSelect.addEventListener('change', () => this.cargarClienteSeleccionado());
-            }
-            if (this.elements.btnGuardarCliente) {
-                this.elements.btnGuardarCliente.addEventListener('click', () => this.guardarCliente());
-            }
-            if (this.elements.btnNuevoCliente) {
-                this.elements.btnNuevoCliente.addEventListener('click', () => this.nuevoCliente());
-            }
-
-            // Materiales
-            if (this.elements.btnAddMaterial) {
-                this.elements.btnAddMaterial.addEventListener('click', () => this.agregarMaterial());
-            }
-
-            // Campos que afectan totales
-            if (this.elements.cotizacionIva) {
-                this.elements.cotizacionIva.addEventListener('input', () => this.actualizarTotales());
-            }
-            if (this.elements.cotizacionDescuento) {
-                this.elements.cotizacionDescuento.addEventListener('input', () => this.actualizarTotales());
-            }
-            if (this.elements.pagoAnticipo) {
-                this.elements.pagoAnticipo.addEventListener('input', () => this.actualizarTotales());
-            }
-
-            // Acciones principales
-            if (this.elements.btnGuardar) {
-                this.elements.btnGuardar.addEventListener('click', () => this.guardarCotizacion());
-            }
-            if (this.elements.btnGenerarPDF) {
-                this.elements.btnGenerarPDF.addEventListener('click', () => this.generarPDF());
-            }
-
-            // Exportar/Importar clientes
-            if (this.elements.btnExportarClientes) {
-                this.elements.btnExportarClientes.addEventListener('click', () => this.exportarClientes());
-            }
-            if (this.elements.btnImportarClientes) {
-                this.elements.btnImportarClientes.addEventListener('click', () => {
-                    if (this.elements.inputImportarClientes) {
-                        this.elements.inputImportarClientes.click();
-                    }
-                });
-            }
-            if (this.elements.inputImportarClientes) {
-                this.elements.inputImportarClientes.addEventListener('change', (e) => this.importarClientes(e));
-            }
-
-        } catch (error) {
-            console.error('Error al inicializar eventos:', error);
-            this.mostrarNotificacion('Error al inicializar eventos', 'error');
-        }
-    }
-
-    initializeValidationEvents() {
-        // Validación de campos numéricos
-        const numericalInputs = [
-            this.elements.cotizacionIva,
-            this.elements.cotizacionDescuento,
-            this.elements.pagoAnticipo
-        ];
-
-        numericalInputs.forEach(input => {
-            if (input) {
-                input.addEventListener('input', (e) => {
-                    let value = e.target.value;
-                    if (value < 0) e.target.value = 0;
-                    if (e.target.id === 'cotizacion-iva' && value > 100) e.target.value = 100;
-                });
-            }
-        });
-
-        // Validación de email
-        if (this.elements.clienteEmail) {
-            this.elements.clienteEmail.addEventListener('blur', (e) => {
-                const email = e.target.value;
-                if (email && !this.validarEmail(email)) {
-                    this.mostrarNotificacion('Por favor, ingrese un email válido', 'warning');
-                }
-            });
-        }
-    }
-
-    initializeTheme() {
-        const theme = localStorage.getItem('theme') || 'light';
-        document.body.setAttribute('data-theme', theme);
-        this.updateThemeButton(theme);
-    }
-
-    // Gestión de materiales
-    agregarMaterial() {
-        const template = this.elements.templateMaterial.content.cloneNode(true);
-        const materialItem = template.querySelector('.material-item');
-        
-        // Obtener referencias a los elementos
-        const btnEliminar = materialItem.querySelector('.btn-eliminar');
-        const inputNombre = materialItem.querySelector('.material-nombre');
-        const inputCantidad = materialItem.querySelector('.material-cantidad');
-        const inputPrecio = materialItem.querySelector('.material-precio');
-        const spanTotal = materialItem.querySelector('.material-total');
-        
-        // Configurar eventos
-        btnEliminar.addEventListener('click', () => {
-            if (this.elements.listaMateriales.children.length > 1) {
-                materialItem.classList.add('fade-out');
-                setTimeout(() => {
-                    materialItem.remove();
-                    this.actualizarTotales();
-                }, 300);
-            } else {
-                this.mostrarNotificacion('Debe haber al menos un concepto en la cotización', 'warning');
-            }
-        });
-        
-        // Actualizar totales al cambiar valores
-        const actualizarTotalMaterial = () => {
-            const cantidad = parseFloat(inputCantidad.value) || 0;
-            const precio = parseFloat(inputPrecio.value) || 0;
-            const total = cantidad * precio;
-            spanTotal.textContent = this.formatearMoneda(total);
-            this.actualizarTotales();
-        };
-        
-        inputNombre.addEventListener('input', () => this.actualizarTotales());
-        inputCantidad.addEventListener('input', actualizarTotalMaterial);
-        inputPrecio.addEventListener('input', actualizarTotalMaterial);
-        
-        // Añadir el material con animación
-        this.elements.listaMateriales.appendChild(materialItem);
-        materialItem.classList.add('fade-in');
-        
-        // Focus en el nuevo material
-        inputNombre.focus();
-    }
-
-    // Gestión de clientes
-    exportarClientes() {
-        const csv = this.clientes.exportarCSV();
-        const blob = new Blob([csv], { type: 'text/csv' });
-        const url = window.URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = `clientes_${new Date().toISOString().split('T')[0]}.csv`;
-        a.click();
-        window.URL.revokeObjectURL(url);
-    }
-
-    async importarClientes(event) {
-        const file = event.target.files[0];
-        if (file) {
-            try {
-                const content = await file.text();
-                const resultado = this.clientes.importarCSV(content);
-                this.mostrarNotificacion(
-                    `Importación completada: ${resultado.exitosos} exitosos, ${resultado.fallidos} fallidos`,
-                    resultado.fallidos > 0 ? 'warning' : 'success'
-                );
-                this.actualizarListaClientes();
-            } catch (error) {
-                this.mostrarNotificacion('Error al importar clientes', 'error');
-            }
-        }
-        event.target.value = '';
-    }
-
-    actualizarListaClientes() {
-        const clientes = this.clientes.obtenerTodos();
-        const select = this.elements.clientesSelect;
-        
-        // Limpiar opciones existentes
-        while (select.options.length > 1) {
-            select.remove(1);
-        }
-        
-        // Agregar clientes
-        clientes.forEach((cliente, index) => {
-            const option = new Option(cliente.nombre, index.toString());
-            select.add(option);
-        });
-    }
-
-    cargarClienteSeleccionado() {
-        const index = this.elements.clientesSelect.value;
-        if (index === '') {
-            this.nuevoCliente();
-            return;
-        }
-
-        const cliente = this.clientes.obtenerTodos()[parseInt(index)];
-        if (cliente) {
-            this.elements.clienteNombre.value = cliente.nombre;
-            this.elements.clienteDireccion.value = cliente.direccion || '';
-            this.elements.clienteTelefono.value = cliente.telefono || '';
-            this.elements.clienteEmail.value = cliente.email || '';
-        }
-    }
-
-    guardarCliente() {
-        console.log('Iniciando guardado de cliente');
-        try {
-            const clienteData = {
-                nombre: this.elements.clienteNombre.value.trim(),
-                direccion: this.elements.clienteDireccion.value.trim(),
-                telefono: this.elements.clienteTelefono.value.trim(),
-                email: this.elements.clienteEmail.value.trim()
-            };
-
-            console.log('Datos del cliente a guardar:', clienteData);
-
-            if (!clienteData.nombre) {
-                this.mostrarNotificacion('El nombre del cliente es requerido', 'error');
-                return;
-            }
-
-            this.clientes.guardar(clienteData);
-            this.actualizarListaClientes();
-            this.mostrarNotificacion('Cliente guardado exitosamente', 'success');
-            
-            console.log('Cliente guardado correctamente');
-        } catch (error) {
-            console.error('Error al guardar cliente:', error);
-            this.mostrarNotificacion('Error al guardar cliente: ' + error.message, 'error');
-        }
-    }
-
-    nuevoCliente() {
-        this.elements.clientesSelect.value = '';
-        this.elements.clienteNombre.value = '';
-        this.elements.clienteDireccion.value = '';
-        this.elements.clienteTelefono.value = '';
-        this.elements.clienteEmail.value = '';
-        this.elements.clienteNombre.focus();
-    }
-
-    // Configuración
-    guardarConfiguracion() {
-        const configData = {
-            nombre: this.elements.configEmpresa.value.trim(),
-            direccion: this.elements.configDireccion.value.trim(),
-            telefono: this.elements.configTelefono.value.trim(),
-            email: this.elements.configEmail.value.trim(),
-            web: this.elements.configWeb.value.trim()
-        };
-
-        if (!configData.nombre) {
-            this.mostrarNotificacion('El nombre de la empresa es requerido', 'error');
-            return;
-        }
-
-        this.config.guardarConfig(configData);
-        this.toggleConfigPanel();
-        this.mostrarNotificacion('Configuración guardada exitosamente', 'success');
-    }
-
-    // Métodos de UI
-    toggleConfigPanel() {
-        this.elements.configPanel.classList.toggle('hidden');
-    }
-
-    toggleTheme() {
-        const currentTheme = document.body.getAttribute('data-theme');
-        const newTheme = currentTheme === 'light' ? 'dark' : 'light';
-        document.body.setAttribute('data-theme', newTheme);
-        localStorage.setItem('theme', newTheme);
-        this.updateThemeButton(newTheme);
-    }
-
-    updateThemeButton(theme) {
-        if (this.elements.btnTheme) {
-            this.elements.btnTheme.textContent = theme === 'light' ? '🌙' : '☀️';
-        }
-    }
-
-    // Cálculos y actualizaciones
-    actualizarTotales() {
-        const materiales = this.obtenerMateriales();
-        const ivaPorcentaje = parseFloat(this.elements.cotizacionIva.value) || 0;
-        const descuento = parseFloat(this.elements.cotizacionDescuento.value) || 0;
-        const anticipo = parseFloat(this.elements.pagoAnticipo.value) || 0;
-
-        // Actualizar cotización
-        this.cotizacion.actualizarDatos({
-            materiales,
-            ivaPorcentaje,
-            descuento,
-            anticipo
-        });
-
-        // Actualizar UI
-        this.elements.subtotal.textContent = this.formatearMoneda(this.cotizacion.subtotal);
-        this.elements.descuento.textContent = this.formatearMoneda(this.cotizacion.descuento);
-        this.elements.iva.textContent = this.formatearMoneda(this.cotizacion.iva);
-        this.elements.total.textContent = this.formatearMoneda(this.cotizacion.total);
-        this.elements.ivaPorcentaje.textContent = ivaPorcentaje;
-        this.elements.anticipoDisplay.textContent = this.formatearMoneda(anticipo);
-        this.elements.pendiente.textContent = this.formatearMoneda(this.cotizacion.total - anticipo);
-    }
-
-    obtenerMateriales() {
-        return Array.from(this.elements.listaMateriales.children).map(item => ({
-            nombre: item.querySelector('.material-nombre').value,
-            cantidad: parseFloat(item.querySelector('.material-cantidad').value) || 0,
-            precio: parseFloat(item.querySelector('.material-precio').value) || 0
-        }));
-    }
-
-    // Gestión de cotizaciones
-    generarFolioAutomatico() {
-        const fecha = new Date();
-        const año = fecha.getFullYear();
-        const mes = (fecha.getMonth() + 1).toString().padStart(2, '0');
-        const ultimoFolio = this.historial.obtenerUltimoFolio() || 0;
-        const nuevoNumero = (ultimoFolio + 1).toString().padStart(3, '0');
-        this.elements.cotizacionFolio.value = `COT-${año}${mes}-${nuevoNumero}`;
-    }
-
-    guardarCotizacion() {
-        if (!this.validarCotizacion()) {
-            return;
-        }
-
-        const cotizacionData = {
-            folio: this.elements.cotizacionFolio.value,
-            fecha: new Date().toISOString(),
-            cliente: {
-                nombre: this.elements.clienteNombre.value,
-                direccion: this.elements.clienteDireccion.value,
-                telefono: this.elements.clienteTelefono.value,
-                email: this.elements.clienteEmail.value
-            },
-            materiales: this.obtenerMateriales(),
-            ivaPorcentaje: parseFloat(this.elements.cotizacionIva.value),
-            descuento: parseFloat(this.elements.cotizacionDescuento.value),
-            anticipo: parseFloat(this.elements.pagoAnticipo.value),
-            formaPago: this.elements.formaPago.value,
-            fechaAnticipo: this.elements.fechaAnticipo.value,
-            notasPago: this.elements.notasPago.value,
-            totales: {
-                subtotal: this.cotizacion.subtotal,
-                descuento: this.cotizacion.descuento,
-                iva: this.cotizacion.iva,
-                total: this.cotizacion.total
-            }
-        };
-
-        this.historial.guardar(cotizacionData);
-        this.mostrarNotificacion('Cotización guardada exitosamente', 'success');
-        this.generarFolioAutomatico();
-    }
-
-    async generarPDF() {
-        if (!this.validarCotizacion()) {
-            return;
-        }
-
-        const configData = this.config.cargarConfig();
-        if (!configData) {
-            this.mostrarNotificacion('Configure los datos de la empresa antes de generar el PDF', 'warning');
-            return;
-        }
-
-        try {
-            await generarPDF({
-                empresa: configData,
-                folio: this.elements.cotizacionFolio.value,
-                fecha: new Date(),
-                cliente: {
-                    nombre: this.elements.clienteNombre.value,
-                    direccion: this.elements.clienteDireccion.value,
-                    telefono: this.elements.clienteTelefono.value,
-                    email: this.elements.clienteEmail.value
-                },
-                materiales: this.obtenerMateriales(),
-                ivaPorcentaje: parseFloat(this.elements.cotizacionIva.value),
-                descuento: parseFloat(this.elements.cotizacionDescuento.value),
-                anticipo: parseFloat(this.elements.pagoAnticipo.value),
-                formaPago: this.elements.formaPago.value,
-                totales: this.cotizacion.obtenerTotales()
-            });
-            this.mostrarNotificacion('PDF generado exitosamente', 'success');
-        } catch (error) {
-            console.error('Error al generar PDF:', error);
-            this.mostrarNotificacion('Error al generar el PDF', 'error');
-        }
-    }
-
-    // Utilidades
-    validarCotizacion() {
-        if (!this.elements.clienteNombre.value.trim()) {
-            this.mostrarNotificacion('Ingrese el nombre del cliente', 'error');
-            this.elements.clienteNombre.focus();
-            return false;
-        }
-
-        const materiales = this.obtenerMateriales();
-        if (!materiales.length || !materiales.every(m => m.nombre.trim())) {
-            this.mostrarNotificacion('Complete la descripción de todos los conceptos', 'error');
-            return false;
-        }
-
-        return true;
-    }
-
-    validarEmail(email) {
-        const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-        return re.test(email);
-    }
-
-    formatearMoneda(valor) {
-        return new Intl.NumberFormat('es-MX', {
-            style: 'currency',
-            currency: 'MXN'
-        }).format(valor);
-    }
-
-    mostrarNotificacion(mensaje, tipo = 'info') {
-        console.log(`Notificación (${tipo}):`, mensaje);
-        
-        const notificacion = document.createElement('div');
-        notificacion.className = `notificacion ${tipo}`;
-        notificacion.textContent = mensaje;
-        
-        // Asegurarse de que el contenedor existe
-        let contenedor = document.getElementById('notificaciones-container');
-        if (!contenedor) {
-            contenedor = document.createElement('div');
-            contenedor.id = 'notificaciones-container';
-            document.body.appendChild(contenedor);
-        }
-        
-        contenedor.appendChild(notificacion);
-        
-        // Animar entrada
-        setTimeout(() => notificacion.classList.add('visible'), 100);
-        
-        // Remover después de 3 segundos
-        setTimeout(() => {
-            notificacion.classList.remove('visible');
-            setTimeout(() => notificacion.remove(), 300);
-        }, 3000);
-    }
-}
-
-// Inicializar la aplicación cuando el DOM esté cargado
+// Wait for the DOM to be fully loaded
 document.addEventListener('DOMContentLoaded', () => {
-    // Registrar el Service Worker para PWA
-    if ('serviceWorker' in navigator) {
-        navigator.serviceWorker.register('/sw.js')
-            .then(reg => console.log('Service Worker registrado'))
-            .catch(err => console.error('Error al registrar Service Worker:', err));
+    console.log("App DOMContentLoaded");
+
+    const mainTabs = document.getElementById('mainTabs');
+    const defaultTabId = 'cotizaciones'; // Default tab to show
+
+    // --- Tab Management ---
+
+    /**
+     * Activates a tab and its content pane.
+     * @param {string} tabId - The ID of the tab content pane (e.g., 'cotizaciones', 'clientes').
+     */
+    function showTab(tabId) {
+        const tabButton = document.querySelector(`#mainTabs .nav-link[data-bs-target="#${tabId}"]`);
+        if (tabButton) {
+            const tabInstance = new bootstrap.Tab(tabButton);
+            tabInstance.show();
+            // The 'shown.bs.tab' event will handle localStorage and module initialization
+        } else {
+            console.error(`Tab button for target #${tabId} not found.`);
+        }
     }
-    
-    // Iniciar la aplicación
-    window.app = new App();
+
+    // Event listener for when a tab has been shown
+    if (mainTabs) {
+        mainTabs.addEventListener('shown.bs.tab', event => {
+            // event.target is the nav link that was clicked
+            // event.relatedTarget is the previous active tab nav link
+            const activeTabId = event.target.dataset.bsTarget.substring(1); // e.g., '#cotizaciones' -> 'cotizaciones'
+            console.log(`Tab shown: ${activeTabId}`);
+            localStorage.setItem('activeTab', activeTabId);
+
+            // Initialize module associated with the tab
+            initializeModuleForTab(activeTabId);
+        });
+    }
+
+    /**
+     * Initializes the JavaScript module corresponding to the active tab.
+     * Modules should expose an init() function and an isInitialized flag.
+     * @param {string} tabId - The ID of the currently active tab.
+     */
+    function initializeModuleForTab(tabId) {
+        console.log(`Attempting to initialize module for tab: ${tabId}`);
+        let moduleToInit = null;
+
+        switch (tabId) {
+            case 'cotizaciones':
+                moduleToInit = window.cotizacionesModule;
+                break;
+            case 'clientes':
+                moduleToInit = window.clientesModule;
+                break;
+            case 'materiales':
+                moduleToInit = window.materialesModule;
+                break;
+            case 'calculadoras':
+                moduleToInit = window.calculadorasModule;
+                break;
+            case 'historial':
+                moduleToInit = window.historialModule;
+                break;
+            case 'configuracion':
+                moduleToInit = window.configuracionModule;
+                break;
+            default:
+                console.log(`No specific module initialization configured for tab: ${tabId}`);
+                return;
+        }
+
+        if (moduleToInit && typeof moduleToInit.init === 'function') {
+            if (!moduleToInit.isInitialized) {
+                console.log(`Initializing ${tabId} module.`);
+                moduleToInit.init();
+                moduleToInit.isInitialized = true; // Set flag to prevent re-initialization
+            } else {
+                console.log(`${tabId} module already initialized.`);
+                // Optionally, call an 'onShow' or 'refresh' function if modules need to react to being shown again
+                if (typeof moduleToInit.onTabShow === 'function') {
+                    moduleToInit.onTabShow();
+                }
+            }
+        } else {
+            console.warn(`${tabId} module or its init function not found or not a function.`);
+        }
+    }
+
+    // --- Initial Tab State ---
+    const savedTab = localStorage.getItem('activeTab');
+    if (savedTab) {
+        console.log(`Found saved tab: ${savedTab}`);
+        // Directly call initializeModuleForTab here because showTab might not fire shown.bs.tab
+        // if the tab is already active in the DOM from server-side or previous state.
+        // However, Bootstrap's `show()` method *should* trigger `shown.bs.tab`.
+        // Let's rely on shown.bs.tab for consistency.
+        showTab(savedTab);
+    } else {
+        console.log(`No saved tab, showing default: ${defaultTabId}`);
+        showTab(defaultTabId);
+    }
+
+    // --- Firebase Auth State Listener (Enhanced) ---
+    function setupFirebaseAuthListener() {
+        if (typeof firebase !== 'undefined' && typeof firebase.auth === 'function') {
+            firebase.auth().onAuthStateChanged(async user => {
+                const loginNavButtonContainer = document.getElementById('loginNavButtonContainer');
+                const userNavDropdownContainer = document.getElementById('userNavDropdownContainer');
+                const userEmailNavbar = document.getElementById('userEmailNavbar');
+
+                if (user) {
+                    console.log('User is signed in:', user.uid, user.email);
+                    if (userEmailNavbar && user.email) userEmailNavbar.textContent = user.email;
+                    else if (userEmailNavbar) userEmailNavbar.textContent = "Usuario Logueado";
+
+                    if (loginNavButtonContainer) loginNavButtonContainer.style.display = 'none';
+                    if (userNavDropdownContainer) userNavDropdownContainer.style.display = 'block';
+
+                    if (window.authModule && typeof window.authModule.getUserRole === 'function') {
+                        window.currentUserRole = await window.authModule.getUserRole(user.uid);
+                        console.log("User role:", window.currentUserRole);
+                    } else {
+                        console.error("authModule or getUserRole function not available.");
+                        window.currentUserRole = null;
+                    }
+                    applyRoleBasedUI(window.currentUserRole); // Apply UI changes based on role
+
+                    if (window.authModule && typeof window.authModule.dismissLoginModal === 'function') {
+                        window.authModule.dismissLoginModal();
+                    }
+
+                } else {
+                    console.log('User is signed out.');
+                    if (userEmailNavbar) userEmailNavbar.textContent = 'Usuario';
+                    if (loginNavButtonContainer) loginNavButtonContainer.style.display = 'block';
+                    if (userNavDropdownContainer) userNavDropdownContainer.style.display = 'none';
+                    window.currentUserRole = null;
+                    console.log("User role set to null on logout.");
+                    applyRoleBasedUI(null); // Apply UI changes for logged-out state
+                }
+            });
+            console.log("Enhanced Firebase Auth listener set up with role application.");
+        } else {
+            console.warn("Firebase Auth not available for listener setup. Retrying in 2s...");
+            setTimeout(setupFirebaseAuthListener, 2000);
+        }
+    }
+
+    // Initial call to setup listener
+    setTimeout(setupFirebaseAuthListener, 500);
+
+
+    // Initialize Auth Module
+    if (window.authModule && typeof window.authModule.initAuth === 'function') {
+        window.authModule.initAuth();
+    } else {
+        console.error("Auth module or its initAuth function not found!");
+    }
+
+    // Initialize Communication Module
+    if (window.communicationModule && typeof window.communicationModule.init === 'function') {
+        window.communicationModule.init();
+    } else {
+        console.error("Communication module or its init function not found!");
+    }
+
+    // --- Role-Based UI Control ---
+    function applyRoleBasedUI(role) {
+        console.log("Applying UI based on role:", role);
+        const configuracionTabLink = document.getElementById('configuracion-tab');
+        
+        if (role === 'admin') {
+            if (configuracionTabLink) configuracionTabLink.style.display = 'list-item'; // Or 'block' if it's not a list item
+             // Other admin-specific UI elements can be shown here
+        } else {
+            // Non-admin or no role
+            if (configuracionTabLink) configuracionTabLink.style.display = 'none';
+
+            // If user is currently on a tab that is now hidden, redirect them
+            const activeTabEl = document.querySelector('#mainTabs .nav-link.active');
+            if (activeTabEl && activeTabEl.id === 'configuracion-tab') {
+                console.log("Configuracion tab was active but is now hidden due to role. Redirecting to cotizaciones.");
+                showTab('cotizaciones'); // showTab is defined earlier in app.js
+            }
+            // Other admin-specific UI elements can be hidden here
+        }
+
+        // Notify modules about role change so they can update their internal UI
+        if (window.configuracionModule && typeof window.configuracionModule.updateUIAccess === 'function') {
+            window.configuracionModule.updateUIAccess(role);
+        }
+        // Add calls for other modules if they implement updateUIAccess
+        // if (window.clientesModule && typeof window.clientesModule.updateUIAccess === 'function') {
+        //     window.clientesModule.updateUIAccess(role);
+        // }
+    }
+    window.applyRoleBasedUI = applyRoleBasedUI; // Make it accessible if needed, or keep private
+
+    // Temporary Test Button for Email Modal Logic
+    const tempTestEmailBtn = document.getElementById('tempTestEmailModal');
+    if (tempTestEmailBtn) {
+        tempTestEmailBtn.addEventListener('click', () => {
+            if (window.communicationModule && typeof window.communicationModule.openEmailQuoteModal === 'function') {
+                console.log("Manually triggering email modal for testing.");
+                // Dummy data for testing:
+                const dummyQuoteId = "DUMMY_QUOTE_ID_001";
+                const dummyClientEmail = "testcliente@example.com";
+                const dummyQuoteNumber = "Q-DUMMY-001";
+                const dummyClientName = "Cliente de Prueba";
+                window.communicationModule.openEmailQuoteModal(dummyQuoteId, dummyClientEmail, dummyQuoteNumber, dummyClientName);
+            } else {
+                alert("Communication module or openEmailQuoteModal function not found.");
+            }
+        });
+    }
+
+    console.log("app.js setup complete.");
 });
-//ayuda a ver que show
+
+// Global reference for current user's role
+window.currentUserRole = null;
+
+// --- Global Helper Functions (Example, if needed) ---
+// window.AppUtils = {
+//     formatDate: function(dateString) {
+//         const options = { year: 'numeric', month: '2-digit', day: '2-digit' };
+//         return new Date(dateString).toLocaleDateString('es-ES', options);
+//     },
+//     // ... other utils
+// };
+
+console.log("app.js script loaded and parsed.");
+
+// Enhance onAuthStateChanged in app.js
+// This is a conceptual placement. The actual onAuthStateChanged is already within the DOMContentLoaded.
+// I need to modify the existing setupFirebaseAuthListener function.
+
+// The following is the MODIFIED setupFirebaseAuthListener function
+// (The diff tool can't easily replace a function body if the signature isn't part of the search)
+// So, I will provide the full new function content for `setupFirebaseAuthListener`
+// and ask to replace the existing `setupFirebaseAuthListener` block.
+
+// **NEW CONTENT FOR setupFirebaseAuthListener IN app.js**
+// function setupFirebaseAuthListener() {
+//     if (typeof firebase !== 'undefined' && typeof firebase.auth === 'function') {
+//         firebase.auth().onAuthStateChanged(async user => {
+//             const loginNavButtonContainer = document.getElementById('loginNavButtonContainer');
+//             const userNavDropdownContainer = document.getElementById('userNavDropdownContainer');
+//             const userEmailNavbar = document.getElementById('userEmailNavbar');
+
+//             if (user) {
+//                 console.log('User is signed in:', user.uid, user.email);
+//                 if (userEmailNavbar && user.email) userEmailNavbar.textContent = user.email;
+//                 else if (userEmailNavbar) userEmailNavbar.textContent = "Usuario Logueado";
+
+//                 if (loginNavButtonContainer) loginNavButtonContainer.style.display = 'none';
+//                 if (userNavDropdownContainer) userNavDropdownContainer.style.display = 'block';
+
+//                 if (window.authModule && typeof window.authModule.getUserRole === 'function') {
+//                     window.currentUserRole = await window.authModule.getUserRole(user.uid);
+//                     console.log("User role:", window.currentUserRole);
+//                 } else {
+//                     console.error("authModule or getUserRole function not available.");
+//                     window.currentUserRole = null;
+//                 }
+//                 applyRoleBasedUI(window.currentUserRole); // Apply UI changes based on role
+
+//                 if (window.authModule && typeof window.authModule.dismissLoginModal === 'function') {
+//                     window.authModule.dismissLoginModal();
+//                 }
+
+//             } else {
+//                 console.log('User is signed out.');
+//                 if (userEmailNavbar) userEmailNavbar.textContent = 'Usuario';
+//                 if (loginNavButtonContainer) loginNavButtonContainer.style.display = 'block';
+//                 if (userNavDropdownContainer) userNavDropdownContainer.style.display = 'none';
+//                 window.currentUserRole = null;
+//                 console.log("User role set to null on logout.");
+//                 applyRoleBasedUI(null); // Apply UI changes for logged-out state
+//             }
+//         });
+//         console.log("Enhanced Firebase Auth listener set up.");
+//     } else {
+//         console.warn("Firebase Auth not available for listener setup. Retrying in 2s...");
+//         setTimeout(setupFirebaseAuthListener, 2000);
+//     }
+// }

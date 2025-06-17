@@ -3,251 +3,828 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Cotizador StableBuilds</title>
-    <link rel="stylesheet" href="styles/main.css">
-    <link rel="stylesheet" href="styles/brands/construccion.css">
-    <link rel="manifest" href="manifest.json">
-    <meta name="theme-color" content="#2196F3">
-    <link rel="icon" type="image/png" href="assets/logos/construccion.png">
+    <title>Cotizaciones Pro - Constructor</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <link rel="stylesheet" href="css/styles.css">
 </head>
-<body class="brand-bg">
-    <div id="app">
-        <!-- Header -->
-        <meta charset="UTF-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <!-- Agregar esta línea -->
-        <meta http-equiv="Content-Security-Policy" content="default-src 'self' https: 'unsafe-inline' 'unsafe-eval'; img-src 'self' data: https:;">
-        <title>Cotizador StableBuilds</title>
-        <header class="brand-primary-bg">
-            <img src="assets/logos/construccion.png" alt="Logo StableBuilds" class="logo-principal">
-            <h1 class="brand-secondary-text">Cotizador</h1>
-            <div class="header-buttons">
-                <button id="btn-config" class="btn-icon" title="Configuración">⚙️</button>
-                <button id="btn-theme" class="btn-icon" title="Cambiar tema">🌓</button>
+<body>
+    <header class="bg-dark text-white p-3">
+        <div class="container d-flex justify-content-between align-items-center">
+            <h1><i class="fas fa-calculator me-2"></i>Cotizaciones Pro</h1>
+            <nav>
+                <ul class="nav" id="userAuthNav">
+                    <!-- Logged out state -->
+                    <li class="nav-item" id="loginNavButtonContainer">
+                        <button type="button" class="btn btn-outline-light" id="btnLoginNavbar" data-bs-toggle="modal" data-bs-target="#loginModal">
+                            <i class="fas fa-sign-in-alt me-1"></i>Login
+                        </button>
+                    </li>
+                    <!-- Logged in state (template, initially hidden) -->
+                    <li class="nav-item dropdown" id="userNavDropdownContainer" style="display: none;">
+                        <a class="nav-link dropdown-toggle text-white" href="#" id="userDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                            <i class="fas fa-user-circle me-1"></i><span id="userEmailNavbar">Usuario</span>
+                        </a>
+                        <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="userDropdown">
+                            <li><a class="dropdown-item" href="#" id="profileLink">Perfil (Próximamente)</a></li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li><button class="dropdown-item" type="button" id="btnLogoutNavbar"><i class="fas fa-sign-out-alt me-1"></i>Cerrar Sesión</button></li>
+                        </ul>
+                    </li>
+                </ul>
+            </nav>
+        </div>
+    </header>
+
+    <!-- Login Modal -->
+    <div class="modal fade" id="loginModal" tabindex="-1" aria-labelledby="loginModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="loginModalLabel">Iniciar Sesión</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <!-- Login Form -->
+                    <form id="loginForm">
+                        <div class="mb-3">
+                            <label for="loginEmail" class="form-label">Correo Electrónico</label>
+                            <input type="email" class="form-control" id="loginEmail" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="loginPassword" class="form-label">Contraseña</label>
+                            <input type="password" class="form-control" id="loginPassword" required>
+                        </div>
+                        <button type="submit" class="btn btn-primary w-100">Iniciar Sesión</button>
+                        <div class="text-center mt-3">
+                            <a href="#" id="showSignUpLink">¿No tienes cuenta? Regístrate aquí</a>
+                        </div>
+                    </form>
+
+                    <!-- Sign Up Form (Initially hidden) -->
+                    <form id="signUpForm" style="display:none;">
+                        <h5 class="mb-3">Crear Nueva Cuenta</h5>
+                        <div class="mb-3">
+                            <label for="signUpEmail" class="form-label">Correo Electrónico</label>
+                            <input type="email" class="form-control" id="signUpEmail" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="signUpPassword" class="form-label">Contraseña</label>
+                            <input type="password" class="form-control" id="signUpPassword" required minlength="6">
+                        </div>
+                        <div class="mb-3">
+                            <label for="signUpConfirmPassword" class="form-label">Confirmar Contraseña</label>
+                            <input type="password" class="form-control" id="signUpConfirmPassword" required>
+                        </div>
+                        <button type="submit" class="btn btn-success w-100">Registrar Cuenta</button>
+                        <div class="text-center mt-3">
+                            <a href="#" id="showLoginLink">¿Ya tienes cuenta? Inicia Sesión</a>
+                        </div>
+                    </form>
+                    <div id="authError" class="text-danger mt-2"></div>
+                </div>
             </div>
-        </header>
-
-        <!-- Contenedor principal -->
-        <main>
-            <!-- Panel de Configuración -->
-            <section id="config-section" class="config-panel hidden">
-                <div class="panel-header">
-                    <h2>Configuración de Empresa</h2>
-                    <button class="btn-close" id="btn-close-config">×</button>
-                </div>
-                <div class="panel-content">
-                    <div class="input-group">
-                        <label for="config-empresa">Nombre:</label>
-                        <input type="text" id="config-empresa" placeholder="StableBuilds">
-                    </div>
-                    <div class="input-group">
-                        <label for="config-direccion">Dirección:</label>
-                        <input type="text" id="config-direccion">
-                    </div>
-                    <div class="input-group">
-                        <label for="config-telefono">Teléfono:</label>
-                        <input type="tel" id="config-telefono">
-                    </div>
-                    <div class="input-group">
-                        <label for="config-email">Email:</label>
-                        <input type="email" id="config-email">
-                    </div>
-                    <div class="input-group">
-                        <label for="config-web">Sitio Web:</label>
-                        <input type="url" id="config-web" placeholder="https://stablebuilds.com">
-                    </div>
-                    <button id="btn-guardar-config" class="btn btn-primary">Guardar</button>
-                </div>
-            </section>
-
-            <!-- Formulario de Cotización -->
-            <section id="form-cotizacion" class="cotizacion-container">
-                <div class="two-columns">
-                    <!-- Datos del Cliente -->
-                    <div class="column">
-                        <div class="card">
-                            <h2 class="card-title">Datos del Cliente</h2>
-                            <div class="client-selection">
-                                <div class="input-group">
-                                    <label for="clientes-guardados">Clientes Guardados:</label>
-                                    <select id="clientes-guardados" class="brand-input">
-                                        <option value="">-- Seleccionar cliente --</option>
-                                    </select>
-                                </div>
-                                <div class="button-group">
-                                    <button id="btn-guardar-cliente" class="btn btn-secondary">
-                                        <span class="icon">💾</span> Guardar Cliente
-                                    </button>
-                                    <button id="btn-nuevo-cliente" class="btn btn-outline">
-                                        <span class="icon">➕</span> Nuevo
-                                    </button>
-                                </div>
-                            </div>
-                            <div class="client-form">
-                                <div class="input-group">
-                                    <label for="cliente-nombre">Nombre:</label>
-                                    <input type="text" id="cliente-nombre" class="brand-input" required>
-                                </div>
-                                <div class="input-group">
-                                    <label for="cliente-direccion">Dirección:</label>
-                                    <input type="text" id="cliente-direccion" class="brand-input">
-                                </div>
-                                <div class="input-group">
-                                    <label for="cliente-telefono">Teléfono:</label>
-                                    <input type="tel" id="cliente-telefono" class="brand-input">
-                                </div>
-                                <div class="input-group">
-                                    <label for="cliente-email">Email:</label>
-                                    <input type="email" id="cliente-email" class="brand-input">
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Configuración de Cotización -->
-                    <div class="column">
-                        <div class="card">
-                            <h2 class="card-title">Configuración</h2>
-                            <div class="input-group">
-                                <label for="cotizacion-folio">Folio:</label>
-                                <input type="text" id="cotizacion-folio" class="brand-input" value="SB-2023-001">
-                            </div>
-                            <div class="input-group">
-                                <label for="cotizacion-iva">IVA (%):</label>
-                                <input type="number" id="cotizacion-iva" class="brand-input" value="16" min="0" max="100">
-                            </div>
-                            <div class="input-group">
-                                <label for="cotizacion-descuento">Descuento ($):</label>
-                                <input type="number" id="cotizacion-descuento" class="brand-input" value="0" min="0">
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                    <!-- Agregar esto en la sección de gestión de clientes -->
-                    <div class="client-actions">
-                        <button id="btn-exportar-clientes" class="btn btn-secondary">
-                            <span class="icon">📤</span> Exportar Clientes
-                        </button>
-                        <input type="file" id="input-importar-clientes" accept=".csv" style="display: none;">
-                        <button id="btn-importar-clientes" class="btn btn-secondary">
-                            <span class="icon">📥</span> Importar Clientes
-                        </button>
-                    </div>
-                    
-
-                <!-- Lista de Materiales -->
-                <div class="card">
-                    <div class="card-header">
-                        <h2 class="card-title">Materiales y Servicios</h2>
-                        <button id="btn-add-material" class="btn btn-primary">
-                            <span class="icon">➕</span> Agregar Concepto
-                        </button>
-                    </div>
-                    <div id="lista-materiales" class="items-container">
-                        <!-- Los items se agregarán dinámicamente -->
-                    </div>
-                </div>
-
-                <!-- Pagos y Adelantos -->
-                <div class="card">
-                    <h2 class="card-title">Pagos y Adelantos</h2>
-                    <div class="two-columns">
-                        <div class="column">
-                            <div class="input-group">
-                                <label for="pago-anticipo">Anticipo ($):</label>
-                                <input type="number" id="pago-anticipo" class="brand-input" value="0" min="0">
-                            </div>
-                            <div class="input-group">
-                                <label for="fecha-anticipo">Fecha de anticipo:</label>
-                                <input type="date" id="fecha-anticipo" class="brand-input">
-                            </div>
-                        </div>
-                        <div class="column">
-                            <div class="input-group">
-                                <label for="forma-pago">Forma de pago:</label>
-                                <select id="forma-pago" class="brand-input">
-                                    <option value="Efectivo">Efectivo</option>
-                                    <option value="Transferencia">Transferencia</option>
-                                    <option value="Depósito">Depósito</option>
-                                    <option value="Cheque">Cheque</option>
-                                    <option value="Tarjeta">Tarjeta</option>
-                                </select>
-                            </div>
-                            <div class="input-group">
-                                <label for="notas-pago">Notas de pago:</label>
-                                <input type="text" id="notas-pago" class="brand-input" placeholder="Referencia, cuenta, etc.">
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Totales -->
-                <div class="card totals-card">
-                    <div class="totals-grid">
-                        <div class="total-row">
-                            <span class="total-label">Subtotal:</span>
-                            <span id="subtotal" class="total-value">$0.00</span>
-                        </div>
-                        <div class="total-row">
-                            <span class="total-label">Descuento:</span>
-                            <span id="descuento" class="total-value discount">$0.00</span>
-                        </div>
-                        <div class="total-row">
-                            <span class="total-label">IVA (<span id="iva-porcentaje">16</span>%):</span>
-                            <span id="iva" class="total-value">$0.00</span>
-                        </div>
-                        <div class="total-row grand-total">
-                            <span class="total-label">TOTAL:</span>
-                            <span id="total" class="total-value">$0.00</span>
-                        </div>
-                        <div class="total-row">
-                            <span class="total-label">Anticipo:</span>
-                            <span id="anticipo-display" class="total-value advance">$0.00</span>
-                        </div>
-                        <div class="total-row pending-total">
-                            <span class="total-label">PENDIENTE DE PAGO:</span>
-                            <span id="pendiente" class="total-value pending">$0.00</span>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Botones de Acción -->
-                <div class="action-buttons">
-                    <button id="btn-guardar" class="btn btn-secondary">
-                        <span class="icon">💾</span> Guardar
-                    </button>
-                    <button id="btn-generar-pdf" class="btn btn-primary">
-                        <span class="icon">📄</span> Generar PDF
-                    </button>
-                </div>
-            </section>
-        </main>
-
-        <!-- Footer -->
-        <footer class="brand-primary-bg">
-            <img src="assets/logos/skillhub.png" alt="Logo SkillHub" class="logo-secundario">
-            <div class="footer-text">
-                <p>© 2025 StableBuilds</p>
-                <p>Versión 1.0.0</p>
-            </div>
-        </footer>
+        </div>
     </div>
 
-    <!-- Templates -->
-    <template id="template-material">
-        <div class="material-item">
-            <button class="btn-icon btn-eliminar" title="Eliminar concepto">🗑️</button>
-            <input type="text" class="material-nombre brand-input" placeholder="Descripción" required>
-            <input type="number" class="material-cantidad brand-input" placeholder="Cant." min="1" value="1" required>
-            <input type="number" class="material-precio brand-input" placeholder="P. Unitario" min="0" step="0.01" value="0" required>
-            <span class="material-total">$0.00</span>
-        </div>
-    </template>
+    <div class="container mt-4">
+        <ul class="nav nav-tabs" id="mainTabs" role="tablist">
+            <li class="nav-item" role="presentation">
+                <button class="nav-link active" id="cotizaciones-tab" data-bs-toggle="tab" data-bs-target="#cotizaciones" type="button" role="tab" aria-controls="cotizaciones" aria-selected="true"><i class="fas fa-file-invoice-dollar me-1"></i>Cotizaciones</button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="clientes-tab" data-bs-toggle="tab" data-bs-target="#clientes" type="button" role="tab" aria-controls="clientes" aria-selected="false"><i class="fas fa-users me-1"></i>Clientes</button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="materiales-tab" data-bs-toggle="tab" data-bs-target="#materiales" type="button" role="tab" aria-controls="materiales" aria-selected="false"><i class="fas fa-tools me-1"></i>Materiales</button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="calculadoras-tab" data-bs-toggle="tab" data-bs-target="#calculadoras" type="button" role="tab" aria-controls="calculadoras" aria-selected="false"><i class="fas fa-calculator me-1"></i>Calculadoras</button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="historial-tab" data-bs-toggle="tab" data-bs-target="#historial" type="button" role="tab" aria-controls="historial" aria-selected="false"><i class="fas fa-history me-1"></i>Historial</button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="configuracion-tab" data-bs-toggle="tab" data-bs-target="#configuracion" type="button" role="tab" aria-controls="configuracion" aria-selected="false"><i class="fas fa-cog me-1"></i>Configuración</button>
+            </li>
+        </ul>
 
-    <!-- Scripts -->
+        <!-- Temporary Test Button for Email Modal -->
+        <div class="my-3">
+            <button id="tempTestEmailModal" class="btn btn-warning">TEST Email Modal (Quote Q-DUMMY-001)</button>
+        </div>
+        <!-- End Temporary Test Button -->
+
+        <div class="tab-content pt-3" id="mainTabsContent">
+            <div class="tab-pane fade show active" id="cotizaciones" role="tabpanel" aria-labelledby="cotizaciones-tab">
+                <!-- Main Cotizaciones UI -->
+                <div class="row">
+                    <!-- Left Column: Quote Form -->
+                    <div class="col-lg-8">
+                        <div class="card shadow-sm mb-4">
+                            <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+                                <h5 class="mb-0">Crear/Editar Cotización</h5>
+                                <span class="badge bg-secondary fs-6" id="quoteNumberDisplay">COT-YYYY-NNNN</span>
+                            </div>
+                            <div class="card-body">
+                                <form id="quoteForm">
+                                    <div class="row mb-3">
+                                        <div class="col-md-6">
+                                            <label for="clienteSelect" class="form-label">Cliente:</label>
+                                            <!-- This will be populated by clientes.js or allow text input -->
+                                            <input type="text" id="clienteSelect" class="form-control" placeholder="Nombre del cliente">
+                                            <!-- <select class="form-select" id="clienteSelect" required></select> -->
+                                        </div>
+                                        <div class="col-md-6">
+                                            <label for="fechaCotizacion" class="form-label">Fecha:</label>
+                                            <input type="date" class="form-control" id="fechaCotizacion" required>
+                                        </div>
+                                    </div>
+
+                                    <h6 class="mt-4">Items de la Cotización:</h6>
+                                    <div id="itemsContainer" class="mb-3">
+                                        <!-- Item rows will be added here by JavaScript -->
+                                    </div>
+                                    <button type="button" id="addItemBtn" class="btn btn-outline-primary mb-3"><i class="fas fa-plus me-1"></i>Agregar Item</button>
+
+                                    <div class="row mt-3">
+                                        <div class="col-md-6">
+                                            <div class="form-check form-switch mb-2">
+                                                <input class="form-check-input" type="checkbox" id="aplicarIVA" checked>
+                                                <label class="form-check-label" for="aplicarIVA">Aplicar IVA (16%)</label>
+                                            </div>
+                                            <div class="form-check form-switch">
+                                                <input class="form-check-input" type="checkbox" id="aplicarDescuento">
+                                                <label class="form-check-label" for="aplicarDescuento">Aplicar Descuento</label>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-6" id="descuentoSection" style="display: none;">
+                                            <div class="input-group">
+                                                <select class="form-select" id="tipoDescuento">
+                                                    <option value="porcentaje">Porcentaje (%)</option>
+                                                    <option value="fijo">Monto Fijo ($)</option>
+                                                </select>
+                                                <input type="number" class="form-control" id="valorDescuento" value="0" step="any" min="0">
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div class="mt-3">
+                                        <label for="notasAdicionales" class="form-label">Notas Adicionales:</label>
+                                        <textarea class="form-control" id="notasAdicionales" rows="3"></textarea>
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Right Column: Quote Preview & Actions -->
+                    <div class="col-lg-4">
+                        <div class="card shadow-sm sticky-top" style="top: 20px;">
+                            <div class="card-header bg-light d-flex justify-content-between align-items-center">
+                                 <h5 class="mb-0">Vista Previa</h5>
+                                 <span id="statusBadge" class="badge bg-warning text-dark">Borrador</span>
+                            </div>
+                            <div class="card-body" id="cotizacionPreview">
+                                <p><strong>Subtotal:</strong> $<span id="previewSubtotal">0.00</span></p>
+                                <p id="previewDescuentoRow" style="display:none;"><strong>Descuento:</strong> $<span id="previewDescuento">0.00</span></p>
+                                <p id="previewIVARow"><strong>IVA (16%):</strong> $<span id="previewIVA">0.00</span></p>
+                                <hr>
+                                <h4 class="text-end"><strong>Total: $<span id="previewTotal">0.00</span></strong></h4>
+                                <hr>
+                                <h6>Items:</h6>
+                                <ul id="previewItems" class="list-group list-group-flush" style="max-height: 200px; overflow-y: auto;">
+                                    <!-- Preview items will be listed here -->
+                                </ul>
+                            </div>
+                            <div class="card-footer">
+                                <div class="d-grid gap-2">
+                                    <button type="button" id="guardarBorradorBtn" class="btn btn-secondary"><i class="fas fa-save me-1"></i>Guardar Borrador</button>
+                                    <button type="button" id="aprobarBtn" class="btn btn-success"><i class="fas fa-check-circle me-1"></i>Aprobar Cotización</button>
+                                    <button type="button" id="generarPDFBtn" class="btn btn-danger"><i class="fas fa-file-pdf me-1"></i>Generar PDF</button>
+                                    <button type="button" id="btnEnviarEmailCotizacion" class="btn btn-info"><i class="fas fa-paper-plane me-1"></i>Enviar por Email</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="tab-pane fade" id="clientes" role="tabpanel" aria-labelledby="clientes-tab">
+                <!-- Client Management UI -->
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h2>Gestión de Clientes</h2>
+                    <button id="btnAgregarCliente" class="btn btn-primary"><i class="fas fa-plus me-1"></i>Agregar Nuevo Cliente</button>
+                </div>
+
+                <!-- Client Form (can be in a modal or collapsible section) -->
+                <div id="clientFormContainer" class="card mb-4" style="display: none;">
+                    <div class="card-header">
+                        <h5 id="clientFormTitle">Agregar Nuevo Cliente</h5>
+                    </div>
+                    <div class="card-body">
+                        <form id="clientForm">
+                            <input type="hidden" id="editingClientId">
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label for="clientName" class="form-label">Nombre Completo <span class="text-danger">*</span></label>
+                                    <input type="text" class="form-control" id="clientName" required>
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label for="clientPhone" class="form-label">Teléfono <span class="text-danger">*</span></label>
+                                    <input type="tel" class="form-control" id="clientPhone" required>
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label for="clientEmail" class="form-label">Email <span class="text-danger">*</span></label>
+                                    <input type="email" class="form-control" id="clientEmail" required>
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label for="clientType" class="form-label">Tipo de Cliente</label>
+                                    <select class="form-select" id="clientType">
+                                        <option value="Particular" selected>Particular</option>
+                                        <option value="Empresa">Empresa</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label for="clientRFC" class="form-label">RFC (Opcional)</label>
+                                    <input type="text" class="form-control" id="clientRFC">
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <div class="form-check mt-4">
+                                        <input class="form-check-input" type="checkbox" id="clientIsFavorite">
+                                        <label class="form-check-label" for="clientIsFavorite">
+                                            Cliente Frecuente/Favorito
+                                        </label>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="mb-3">
+                                <label for="clientAddress" class="form-label">Dirección (Opcional)</label>
+                                <textarea class="form-control" id="clientAddress" rows="2"></textarea>
+                            </div>
+                            <div class="mb-3">
+                                <label for="clientNotes" class="form-label">Notas Adicionales (Opcional)</label>
+                                <textarea class="form-control" id="clientNotes" rows="2"></textarea>
+                            </div>
+                            <div class="d-flex justify-content-end">
+                                <button type="button" id="btnCancelClientForm" class="btn btn-secondary me-2">Cancelar</button>
+                                <button type="submit" id="btnSaveClient" class="btn btn-success">Guardar Cliente</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+
+                <!-- Client List -->
+                <div class="card">
+                    <div class="card-header">
+                        <h5>Listado de Clientes</h5>
+                    </div>
+                    <div class="card-body">
+                        <!-- Optional: Search/Filter inputs -->
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <input type="text" id="clientSearchInput" class="form-control" placeholder="Buscar por nombre...">
+                            </div>
+                            <div class="col-md-4">
+                                <select id="clientFilterType" class="form-select">
+                                    <option value="">Todos los Tipos</option>
+                                    <option value="Particular">Particular</option>
+                                    <option value="Empresa">Empresa</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="table-responsive">
+                            <table class="table table-hover" id="clientListTable"> <!-- Added ID for clarity, though tbody ID is main target -->
+                                <thead class="table-light">
+                                    <tr>
+                                        <th>Nombre</th>
+                                        <th>Teléfono</th>
+                                        <th>Email</th>
+                                        <th>Tipo</th>
+                                        <th>Favorito</th>
+                                        <th>Acciones</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="clientListTableBody">
+                                    <!-- Client rows will be injected here by JavaScript -->
+                                    <tr><td colspan="6" class="text-center">Cargando clientes...</td></tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="tab-pane fade" id="materiales" role="tabpanel" aria-labelledby="materiales-tab">
+                <!-- Material Management UI -->
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h2>Gestión de Materiales</h2>
+                    <button id="btnAgregarMaterial" class="btn btn-primary"><i class="fas fa-plus me-1"></i>Agregar Nuevo Material</button>
+                </div>
+
+                <!-- Material Form -->
+                <div id="materialFormContainer" class="card mb-4" style="display: none;">
+                    <div class="card-header">
+                        <h5 id="materialFormTitle">Agregar Nuevo Material</h5>
+                    </div>
+                    <div class="card-body">
+                        <form id="materialForm">
+                            <input type="hidden" id="editingMaterialId">
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label for="materialName" class="form-label">Nombre del Producto <span class="text-danger">*</span></label>
+                                    <input type="text" class="form-control" id="materialName" required>
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label for="materialSku" class="form-label">Código/SKU</label>
+                                    <input type="text" class="form-control" id="materialSku">
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="col-md-4 mb-3">
+                                    <label for="materialPrice" class="form-label">Precio Unitario <span class="text-danger">*</span></label>
+                                    <input type="number" class="form-control" id="materialPrice" step="0.01" min="0" required>
+                                </div>
+                                <div class="col-md-4 mb-3">
+                                    <label for="materialUnit" class="form-label">Unidad de Medida <span class="text-danger">*</span></label>
+                                    <input type="text" class="form-control" id="materialUnit" placeholder="Ej: Pza, Mts, Lt, Kg" required>
+                                </div>
+                                 <div class="col-md-4 mb-3">
+                                    <label for="materialCategory" class="form-label">Categoría <span class="text-danger">*</span></label>
+                                    <select class="form-select" id="materialCategory" required>
+                                        <option value="" disabled selected>Seleccione una categoría</option>
+                                        <option value="Drywall">Drywall</option>
+                                        <option value="Eléctrico">Eléctrico</option>
+                                        <option value="Plomería">Plomería</option>
+                                        <option value="Pintura">Pintura</option>
+                                        <option value="Concreto">Concreto y Cemento</option>
+                                        <option value="Acero">Acero y Perfiles</option>
+                                        <option value="Madera">Madera</option>
+                                        <option value="Herramientas">Herramientas</option>
+                                        <option value="Fijaciones">Tornillería y Fijaciones</option>
+                                        <option value="Seguridad">Equipo de Seguridad</option>
+                                        <option value="Otro">Otro</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="mb-3">
+                                <label for="materialSupplier" class="form-label">Proveedor</label>
+                                <input type="text" class="form-control" id="materialSupplier">
+                            </div>
+                             <div class="mb-3">
+                                <label for="materialNotes" class="form-label">Notas Adicionales (Opcional)</label>
+                                <textarea class="form-control" id="materialNotes" rows="2"></textarea>
+                            </div>
+                            <div class="d-flex justify-content-end">
+                                <button type="button" id="btnCancelMaterialForm" class="btn btn-secondary me-2">Cancelar</button>
+                                <button type="submit" id="btnSaveMaterial" class="btn btn-success">Guardar Material</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+
+                <!-- Material List -->
+                <div class="card">
+                    <div class="card-header">
+                        <h5>Listado de Materiales</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row mb-3">
+                            <div class="col-md-5">
+                                <input type="text" id="materialSearchInput" class="form-control" placeholder="Buscar por Nombre, SKU...">
+                            </div>
+                            <div class="col-md-4">
+                                <select id="materialCategoryFilter" class="form-select">
+                                    <option value="">Todas las Categorías</option>
+                                     <option value="Drywall">Drywall</option>
+                                     <option value="Eléctrico">Eléctrico</option>
+                                     <option value="Plomería">Plomería</option>
+                                     <option value="Pintura">Pintura</option>
+                                     <option value="Concreto">Concreto y Cemento</option>
+                                     <option value="Acero">Acero y Perfiles</option>
+                                     <option value="Madera">Madera</option>
+                                     <option value="Herramientas">Herramientas</option>
+                                     <option value="Fijaciones">Tornillería y Fijaciones</option>
+                                     <option value="Seguridad">Equipo de Seguridad</option>
+                                     <option value="Otro">Otro</option>
+                                </select>
+                            </div>
+                            <div class="col-md-3">
+                                <!-- Placeholder for other filters or actions -->
+                            </div>
+                        </div>
+                        <div class="table-responsive">
+                            <table class="table table-hover" id="materialListTable"> <!-- Added ID for clarity -->
+                                <thead class="table-light">
+                                    <tr>
+                                        <th>Nombre</th>
+                                        <th>SKU</th>
+                                        <th>Categoría</th>
+                                        <th>Precio Unit.</th>
+                                        <th>Unidad</th>
+                                        <th>Proveedor</th>
+                                        <th>Acciones</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="materialListTableBody">
+                                    <!-- Material rows will be injected here -->
+                                    <tr><td colspan="7" class="text-center">Cargando materiales...</td></tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="tab-pane fade" id="calculadoras" role="tabpanel" aria-labelledby="calculadoras-tab">
+                <!-- Calculators Module UI -->
+                <h2>Calculadoras de Materiales</h2>
+                <p>Estime las cantidades de materiales para proyectos comunes.</p>
+
+                <nav class="nav nav-pills mb-3 mt-3" id="calculatorsSubNav" role="tablist">
+                    <a class="nav-link active" id="calc-drywall-tab" data-bs-toggle="pill" data-bs-target="#calcDrywallContent" href="#calcDrywallContent" role="tab" aria-controls="calcDrywallContent" aria-selected="true">Drywall</a>
+                    <a class="nav-link" id="calc-pintura-tab" data-bs-toggle="pill" data-bs-target="#calcPinturaContent" href="#calcPinturaContent" role="tab" aria-controls="calcPinturaContent" aria-selected="false">Pintura</a>
+                    <a class="nav-link" id="calc-concreto-tab" data-bs-toggle="pill" data-bs-target="#calcConcretoContent" href="#calcConcretoContent" role="tab" aria-controls="calcConcretoContent" aria-selected="false">Concreto</a>
+                    <a class="nav-link" id="calc-electrica-tab" data-bs-toggle="pill" data-bs-target="#calcElectricaContent" href="#calcElectricaContent" role="tab" aria-controls="calcElectricaContent" aria-selected="false">Eléctrica (Básico)</a>
+                </nav>
+
+                <div class="tab-content" id="calculatorsSubNavContent">
+                    <!-- Drywall Calculator Content -->
+                    <div class="tab-pane fade show active" id="calcDrywallContent" role="tabpanel" aria-labelledby="calc-drywall-tab">
+                        <h4><i class="fas fa-ruler-combined me-2"></i>Calculadora de Drywall</h4>
+                        <div class="card shadow-sm">
+                            <div class="card-body">
+                                <form id="drywallCalcForm" class="row g-3">
+                                    <div class="col-md-3">
+                                        <label for="drywallLargo" class="form-label">Largo Habitación (mts)</label>
+                                        <input type="number" class="form-control" id="drywallLargo" step="0.01" placeholder="Ej: 4.5" required>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <label for="drywallAncho" class="form-label">Ancho Habitación (mts)</label>
+                                        <input type="number" class="form-control" id="drywallAncho" step="0.01" placeholder="Ej: 3.2" required>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <label for="drywallAlto" class="form-label">Alto Habitación (mts)</label>
+                                        <input type="number" class="form-control" id="drywallAlto" step="0.01" placeholder="Ej: 2.4" required>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <label for="drywallWaste" class="form-label">Desperdicio (%)</label>
+                                        <input type="number" class="form-control" id="drywallWaste" value="10" step="1" min="0" max="50">
+                                    </div>
+                                    <div class="col-12 text-center mt-4">
+                                        <button type="button" id="btnCalculateDrywall" class="btn btn-info"><i class="fas fa-calculator me-1"></i>Calcular Materiales</button>
+                                    </div>
+                                </form>
+                                <hr>
+                                <div id="drywallResults" class="mt-3">
+                                    <!-- Results will be displayed here -->
+                                </div>
+                                <div class="mt-3 text-end">
+                                    <button type="button" id="btnAddDrywallToQuote" class="btn btn-success" disabled><i class="fas fa-plus-circle me-1"></i>Agregar a Cotización Actual</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Pintura Calculator Content -->
+                    <div class="tab-pane fade" id="calcPinturaContent" role="tabpanel" aria-labelledby="calc-pintura-tab">
+                        <h4><i class="fas fa-paint-roller me-2"></i>Calculadora de Pintura</h4>
+                        <div class="card shadow-sm">
+                            <div class="card-body">
+                                <form id="pinturaCalcForm" class="row g-3">
+                                    <div class="col-md-4">
+                                        <label for="pinturaArea" class="form-label">Metros Cuadrados a Pintar (m²)</label>
+                                        <input type="number" class="form-control" id="pinturaArea" step="0.1" placeholder="Ej: 50" required>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <label for="pinturaManos" class="form-label">Número de Manos</label>
+                                        <input type="number" class="form-control" id="pinturaManos" value="2" step="1" min="1">
+                                    </div>
+                                    <div class="col-md-4">
+                                        <label for="pinturaRendimiento" class="form-label">Rendimiento Pintura (m²/L)</label>
+                                        <input type="number" class="form-control" id="pinturaRendimiento" value="10" step="0.5" min="1">
+                                    </div>
+                                    <div class="col-12 text-center mt-4">
+                                        <button type="button" id="btnCalculatePintura" class="btn btn-info"><i class="fas fa-calculator me-1"></i>Calcular Pintura</button>
+                                    </div>
+                                </form>
+                                <hr>
+                                <div id="pinturaResults" class="mt-3">
+                                    <!-- Results will be displayed here -->
+                                </div>
+                                <div class="mt-3 text-end">
+                                    <button type="button" id="btnAddPinturaToQuote" class="btn btn-success" disabled><i class="fas fa-plus-circle me-1"></i>Agregar a Cotización Actual</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Concreto Calculator Content -->
+                    <div class="tab-pane fade" id="calcConcretoContent" role="tabpanel" aria-labelledby="calc-concreto-tab">
+                        <h4><i class="fas fa-cubes me-2"></i>Calculadora de Concreto</h4>
+                         <div class="card shadow-sm">
+                            <div class="card-body">
+                                <form id="concretoCalcForm" class="row g-3">
+                                    <div class="col-md-3">
+                                        <label for="concretoLargo" class="form-label">Largo (mts)</label>
+                                        <input type="number" class="form-control" id="concretoLargo" step="0.01" placeholder="Ej: 5" required>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <label for="concretoAncho" class="form-label">Ancho (mts)</label>
+                                        <input type="number" class="form-control" id="concretoAncho" step="0.01" placeholder="Ej: 4" required>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <label for="concretoEspesor" class="form-label">Espesor (cm)</label>
+                                        <input type="number" class="form-control" id="concretoEspesor" step="0.1" placeholder="Ej: 10" required>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <label for="concretoWaste" class="form-label">Desperdicio (%)</label>
+                                        <input type="number" class="form-control" id="concretoWaste" value="7" step="1" min="0">
+                                    </div>
+                                    <div class="col-12 mt-3">
+                                        <input class="form-check-input" type="checkbox" value="" id="concretoIncluirMalla">
+                                        <label class="form-check-label" for="concretoIncluirMalla">
+                                            Incluir Malla Electrosoldada (para el área de L x A)
+                                        </label>
+                                    </div>
+                                     <div class="col-12 mt-3">
+                                        <input class="form-check-input" type="checkbox" value="" id="concretoDesgloseComponentes">
+                                        <label class="form-check-label" for="concretoDesgloseComponentes">
+                                            Desglosar componentes (Cemento, Arena, Grava) - Ratio 1:2:3
+                                        </label>
+                                    </div>
+                                    <div class="col-12 text-center mt-4">
+                                        <button type="button" id="btnCalculateConcreto" class="btn btn-info"><i class="fas fa-calculator me-1"></i>Calcular Concreto</button>
+                                    </div>
+                                </form>
+                                <hr>
+                                <div id="concretoResults" class="mt-3">
+                                    <!-- Results will be displayed here -->
+                                </div>
+                                <div class="mt-3 text-end">
+                                    <button type="button" id="btnAddConcretoToQuote" class="btn btn-success" disabled><i class="fas fa-plus-circle me-1"></i>Agregar a Cotización Actual</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Electrica Calculator Content -->
+                    <div class="tab-pane fade" id="calcElectricaContent" role="tabpanel" aria-labelledby="calc-electrica-tab">
+                        <h4><i class="fas fa-bolt me-2"></i>Calculadora Eléctrica (Estimación Básica)</h4>
+                        <div class="card shadow-sm">
+                            <div class="card-body">
+                                <form id="electricaCalcForm" class="row g-3">
+                                    <div class="col-md-4">
+                                        <label for="electricaTipoInstalacion" class="form-label">Tipo de Instalación</label>
+                                        <select id="electricaTipoInstalacion" class="form-select">
+                                            <option value="residencial_basico" selected>Residencial Básico</option>
+                                            <option value="comercial_ligero">Comercial Ligero</option>
+                                            <option value="taller_pequeno">Taller Pequeño</option>
+                                        </select>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <label for="electricaMetrosCanalizacion" class="form-label">Metros Lineales de Canalización</label>
+                                        <input type="number" class="form-control" id="electricaMetrosCanalizacion" step="1" placeholder="Ej: 50" required>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <label for="electricaNumSalidas" class="form-label">Número Total de Salidas/Puntos</label>
+                                        <input type="number" class="form-control" id="electricaNumSalidas" step="1" placeholder="Ej: 25" required>
+                                    </div>
+                                    <!-- Optional: Numero de Circuitos -->
+                                    <!-- <div class="col-md-3">
+                                        <label for="electricaNumCircuitos" class="form-label">Número de Circuitos (Opcional)</label>
+                                        <input type="number" class="form-control" id="electricaNumCircuitos" step="1" placeholder="Ej: 3">
+                                    </div> -->
+                                    <div class="col-12 text-center mt-4">
+                                        <button type="button" id="btnCalculateElectrica" class="btn btn-info"><i class="fas fa-calculator me-1"></i>Calcular Material Eléctrico</button>
+                                    </div>
+                                </form>
+                                <hr>
+                                <div id="electricaResults" class="mt-3">
+                                    <!-- Results will be displayed here -->
+                                </div>
+                                <div class="mt-3 text-end">
+                                    <button type="button" id="btnAddElectricaToQuote" class="btn btn-success" disabled><i class="fas fa-plus-circle me-1"></i>Agregar a Cotización Actual</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="tab-pane fade" id="historial" role="tabpanel" aria-labelledby="historial-tab">
+                <!-- History (Past Quotes) Management UI -->
+                <h2>Historial de Cotizaciones</h2>
+                <p>Consulta, filtra y gestiona cotizaciones pasadas.</p>
+
+                <div class="card mt-4">
+                    <div class="card-header">
+                        <h5><i class="fas fa-filter me-2"></i>Filtros de Búsqueda</h5>
+                    </div>
+                    <div class="card-body">
+                        <form id="historialFilterForm" class="row g-3 align-items-end">
+                            <div class="col-md-4">
+                                <label for="histClientNameFilter" class="form-label">Nombre del Cliente</label>
+                                <input type="text" class="form-control" id="histClientNameFilter" placeholder="Buscar por cliente...">
+                            </div>
+                            <div class="col-md-3">
+                                <label for="histStatusFilter" class="form-label">Estado</label>
+                                <select id="histStatusFilter" class="form-select">
+                                    <option value="" selected>Todas</option>
+                                    <option value="borrador">Borrador</option>
+                                    <option value="aprobada">Aprobada</option>
+                                    <option value="rechazada">Rechazada</option>
+                                </select>
+                            </div>
+                            <div class="col-md-2">
+                                <label for="histDateFromFilter" class="form-label">Desde</label>
+                                <input type="date" class="form-control" id="histDateFromFilter">
+                            </div>
+                            <div class="col-md-2">
+                                <label for="histDateToFilter" class="form-label">Hasta</label>
+                                <input type="date" class="form-control" id="histDateToFilter">
+                            </div>
+                            <div class="col-md-1">
+                                <button type="button" id="btnApplyHistFilters" class="btn btn-primary w-100">Filtrar</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+
+                <div class="card mt-4">
+                    <div class="card-header">
+                        <h5><i class="fas fa-list-alt me-2"></i>Cotizaciones Registradas</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="table-responsive"> <!-- This div should already exist, ensuring it does -->
+                            <table id="historialTable" class="table table-hover">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th># Cotización</th>
+                                        <th>Cliente</th>
+                                        <th>Fecha</th>
+                                        <th>Monto Total</th>
+                                        <th>Estado</th>
+                                        <th style="width: 20%;">Acciones</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="historialTableBody">
+                                    <!-- Quote history rows will be injected here -->
+                                    <tr><td colspan="6" class="text-center">Cargando historial...</td></tr>
+                                </tbody>
+                            </table>
+                        </div>
+                        <!-- Basic Pagination Placeholder (Optional for MVP) -->
+                        <!-- <nav aria-label="Page navigation">
+                            <ul class="pagination justify-content-center mt-3">
+                                <li class="page-item disabled"><a class="page-link" href="#">Anterior</a></li>
+                                <li class="page-item active"><a class="page-link" href="#">1</a></li>
+                                <li class="page-item"><a class="page-link" href="#">2</a></li>
+                                <li class="page-item"><a class="page-link" href="#">Siguiente</a></li>
+                            </ul>
+                        </nav> -->
+                    </div>
+                </div>
+
+                <!-- Modal for View Details (Simplified) -->
+                <div class="modal fade" id="quoteDetailModal" tabindex="-1" aria-labelledby="quoteDetailModalLabel" aria-hidden="true">
+                    <div class="modal-dialog modal-lg">
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <h5 class="modal-title" id="quoteDetailModalLabel">Detalles de la Cotización</h5>
+                                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                            </div>
+                            <div class="modal-body" id="quoteDetailModalBody">
+                                <!-- Content will be injected by JavaScript -->
+                            </div>
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+            <div class="tab-pane fade" id="configuracion" role="tabpanel" aria-labelledby="configuracion-tab">
+                <!-- Configuration Management UI -->
+                <h2>Configuración General de la Aplicación</h2>
+                <p>Ajustes para personalizar la información de la empresa, IVA, y términos para las cotizaciones.</p>
+
+                <form id="configForm" class="mt-4">
+                    <div class="row">
+                        <!-- Column 1: Company Details & Logo -->
+                        <div class="col-md-6">
+                            <h4><i class="fas fa-building me-2"></i>Datos de la Empresa</h4>
+                            <div class="mb-3">
+                                <label for="configCompanyName" class="form-label">Nombre de la Empresa <span class="text-danger">*</span></label>
+                                <input type="text" class="form-control" id="configCompanyName" required>
+                            </div>
+                            <div class="mb-3">
+                                <label for="configCompanyRfc" class="form-label">RFC</label>
+                                <input type="text" class="form-control" id="configCompanyRfc">
+                            </div>
+                            <div class="mb-3">
+                                <label for="configCompanyAddress" class="form-label">Dirección</label>
+                                <textarea class="form-control" id="configCompanyAddress" rows="2"></textarea>
+                            </div>
+                            <div class="mb-3">
+                                <label for="configCompanyPhone" class="form-label">Teléfono</label>
+                                <input type="tel" class="form-control" id="configCompanyPhone">
+                            </div>
+                            <div class="mb-3">
+                                <label for="configCompanyEmail" class="form-label">Email de Contacto</label>
+                                <input type="email" class="form-control" id="configCompanyEmail">
+                            </div>
+
+                            <h4 class="mt-4"><i class="fas fa-image me-2"></i>Logo de la Empresa</h4>
+                            <div class="mb-3">
+                                <label for="companyLogoInput" class="form-label">Seleccionar Logo</label>
+                                <input class="form-control" type="file" id="companyLogoInput" accept="image/png, image/jpeg, image/gif">
+                                <small class="form-text text-muted">Formatos recomendados: PNG, JPG, GIF. Tamaño máximo: 2MB.</small>
+                            </div>
+                            <div class="mb-3 text-center">
+                                <img id="companyLogoPreview" src="https://via.placeholder.com/200x100.png?text=Vista+Previa+Logo" alt="Vista previa del logo" class="img-fluid rounded border" style="max-height: 100px;">
+                                <input type="hidden" id="currentLogoUrl"> <!-- To store existing logo URL -->
+                            </div>
+                        </div>
+
+                        <!-- Column 2: IVA, Terms, Bank Details -->
+                        <div class="col-md-6">
+                            <h4><i class="fas fa-percent me-2"></i>Configuración de IVA</h4>
+                            <div class="mb-3">
+                                <label for="defaultIvaRate" class="form-label">Tasa de IVA por Defecto (%) <span class="text-danger">*</span></label>
+                                <input type="number" class="form-control" id="defaultIvaRate" step="0.01" min="0" max="100" placeholder="Ej: 16" required>
+                            </div>
+
+                            <h4 class="mt-4"><i class="fas fa-file-contract me-2"></i>Términos y Condiciones</h4>
+                            <div class="mb-3">
+                                <label for="termsConditionsInput" class="form-label">Texto para Cotizaciones</label>
+                                <textarea class="form-control" id="termsConditionsInput" rows="8" placeholder="Escriba los términos y condiciones que aparecerán en sus cotizaciones..."></textarea>
+                            </div>
+
+                            <h4 class="mt-4"><i class="fas fa-university me-2"></i>Datos Bancarios (Opcional)</h4>
+                            <div class="mb-3">
+                                <label for="bankDetailsInput" class="form-label">Información Bancaria para Pagos</label>
+                                <textarea class="form-control" id="bankDetailsInput" rows="4" placeholder="Ej: Nombre del Banco, No. de Cuenta, CLABE Interbancaria..."></textarea>
+                            </div>
+                        </div>
+                    </div>
+
+                    <hr class="my-4">
+
+                    <div class="d-flex justify-content-end">
+                        <button type="submit" id="btnSaveConfiguration" class="btn btn-primary btn-lg"><i class="fas fa-save me-2"></i>Guardar Configuración</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-    <script type="module" src="js/app.js"></script>
-    
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.23/jspdf.plugin.autotable.min.js"></script>
+    <script src="js/firebase-config.js"></script>
+    <script src="js/app.js"></script>
+    <script src="js/cotizaciones.js"></script>
+    <script src="js/clientes.js"></script>
+    <script src="js/materiales.js"></script>
+    <script src="js/calculadoras.js"></script>
+    <script src="js/pdf-generator.js"></script>
+    <script src="js/configuracion.js"></script>
+    <script src="js/historial.js"></script>
+
+    <!-- Email Quote Modal -->
+    <div class="modal fade" id="emailQuoteModal" tabindex="-1" aria-labelledby="emailQuoteModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="emailQuoteModalLabel">Enviar Cotización por Email</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="emailQuoteForm">
+                        <input type="hidden" id="emailQuoteId">
+                        <div class="mb-3">
+                            <label for="emailTo" class="form-label">Para:</label>
+                            <input type="email" class="form-control" id="emailTo" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="emailSubject" class="form-label">Asunto:</label>
+                            <input type="text" class="form-control" id="emailSubject" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="emailBody" class="form-label">Cuerpo del Mensaje:</label>
+                            <textarea class="form-control" id="emailBody" rows="5" required></textarea>
+                        </div>
+                        <p class="text-muted small">Nota: La cotización en PDF se adjuntará automáticamente.</p>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="button" id="btnSendEmail" class="btn btn-primary"><i class="fas fa-paper-plane me-1"></i>Enviar Email</button>
+                </div>
+            </div>
+        </div>
+    </div>
 </body>
 </html>
